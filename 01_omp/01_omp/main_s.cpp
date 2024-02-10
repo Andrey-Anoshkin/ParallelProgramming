@@ -95,21 +95,27 @@ int main() {
 
 	// Последовательное вычисление
 
-	cout << "Posl:\n";
-	if (calcPosl)
+	if (calcPosl) {
+		cout << "Posl:\n";
 		calculate(integral_posl);
+		cout << "\n";
+	}
 
 	// Параллельное вычисление
 	
-	cout << "Paral:\n";
-	if (calcParal)
+	if (calcParal) {
+		cout << "Paral:\n";
 		calculate(integral_paral);
+		cout << "\n";
+	}
 
 	// Параллельное вычисление по формуле Симпсона
 
-	cout << "Simpson:\n";
-	if (calcSimpson)
+	if (calcSimpson) {
+		cout << "Simpson:\n";
 		calculate(integral_Simpson);
+		cout << "\n";
+	}
 
 	system("pause");
 	return 0;
