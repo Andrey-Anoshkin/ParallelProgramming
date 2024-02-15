@@ -36,7 +36,7 @@ void integral_paral(const double a, const double b, const double h, double* res)
 
 void integral_Simpson(const double a, const double b, const double h, double* res) {
 	double sum = f1(a) + f1(b);
-	int n = (int)((b - a) / 2 * h);
+	int n = (int)((b - a) / 2 / h);
 
 	#pragma omp parallel for reduction(+: sum)
 	for (int i = 1; i <= n; ++i) {

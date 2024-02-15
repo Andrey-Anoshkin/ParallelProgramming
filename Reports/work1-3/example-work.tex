@@ -1,0 +1,596 @@
+\documentclass[bachelor, och, referat]{SCWorks}
+
+\usepackage[T2A]{fontenc}
+\usepackage[cp1251]{inputenc}
+\usepackage{graphicx}
+
+\usepackage[sort,compress]{cite}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{fancyvrb}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage[english,russian]{babel}
+\usepackage{tempora}
+\usepackage{minted}
+\usepackage{import}
+\graphicspath{ {./images/} }
+%\definecolor{codebg}{rgb}{0.9,0.9,0.9} %описание собственного цвета (почти
+%белый) \setminted{         % установка параметров по умолчанию для команд
+%бибилиотеки minted bgcolor=codebg, % установка цвета фона программного кода
+%linenos=true,   % включение номеров строк в листингах numbersep=5pt,  %
+%промежуток между номерами строк и началом строк листинга breaklines}     %
+%автоматические переносы строк (когда строки не умещаются)
+
+\usemintedstyle{bw} % включение черно-белого стиля программного кода
+	
+
+\usepackage[hidelinks]{hyperref}
+
+\setminted{
+	style=bw,
+	framesep=2mm, 
+	baselinestretch=1.2, 
+	fontsize=\footnotesize, 
+	linenos,
+	breaklines=true
+}
+
+\newcommand{\eqdef}{\stackrel {\rm def}{=}}
+
+\newtheorem{lem}{Лемма}
+
+\begin{document}
+
+% Кафедра (в родительном падеже)
+\chair{математической кибернетики и компьютерных наук}
+
+% Тема работы
+\title{Численное интегрирование, формула Симпсона, вычисление определенных и кратных интегралов}
+
+% Курс
+\course{3}
+
+% Группа
+\group{311}
+
+% Факультет (в родительном падеже) (по умолчанию "факультета КНиИТ")
+%\department{факультета КНиИТ}
+
+% Специальность/направление код - наименование
+\napravlenie{02.03.02 "--- Фундаментальная информатика и информационные технологии}
+
+% Для студентки. Для работы студента следующая команда не нужна.
+\studenttitle{Студента}
+
+% Фамилия, имя, отчество в родительном падеже
+\author{Аношкина Андрея Алексеевича}
+
+% Заведующий кафедрой
+\chtitle{к.\,ф.-м.\,н., доцент} % степень, звание
+\chname{С.\,В.\,Миронов}
+
+%Научный руководитель (для реферата преподаватель проверяющий работу)
+%!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+\satitle{Старший преподаватель} %должность, степень, звание
+\saname{М.\,С.\,Портенко}
+
+% Руководитель практики от организации (только для практики, для остальных типов
+% работ не используется)
+\patitle{к.\,ф.-м.\,н., доцент}
+\paname{Д.\,Ю.\,Петров}
+
+% Семестр (только для практики, для остальных типов работ не используется)
+\term{6}
+
+% Наименование практики (только для практики, для остальных типов работ не
+% используется)
+\practtype{учебная}
+
+% Продолжительность практики (количество недель) (только для практики, для
+% остальных типов работ не используется)
+\duration{2}
+
+% Даты начала и окончания практики (только для практики, для остальных типов
+% работ не используется)
+\practStart{01.07.2016} \practFinish{14.07.2016}
+
+% Год выполнения отчета
+\date{2024}
+
+\maketitle
+
+\tableofcontents
+
+% 1) 1
+%///////////////////////////////////////////////////////////////////////////////
+\section{Work 01}
+
+\subsection*{Задание}
+
+Реализуйте параллельные алгоритмы, использующие метод прямоугольников и формулу
+Симпсона для подсчета интегралов. Точные значения интегралов указаны для
+проверки численных вычислений. В случае, если в верхнем пределе интегрирования
+указан знак бесконечности, то в расчете необходимо заменить его на $10^6$. Сравните
+время численного интегрирования для последовательной и параллельной реализации.
+Какое ускорение выполнения программы предоставляет переход к многопоточной
+версии?
+
+Вариант задания 2:
+\[\int_{0}^{\infty} \frac{\,dx}{1 + x ^ 2} = \frac{\pi}{2}  \]
+
+\subsection*{Метод прямоугольников, формула Симпсона}
+
+Метод прямоугольников геометрически заключается в том, что интеграл
+приближенно представляется в виде суммы площадей элементарных
+прямоугольников.
+
+Для случая деления отрезка интегрирования на равные части и
+вычисления функции в центре отрезков:
+\begin{equation}
+    \begin{cases}
+		J = \int_{a}^{b} f(x)\,dx \approx \sum_{i = 0}^{N - 1} (h \cdot f (x_i)) = h \cdot \sum_{i = 0}^{N - 1} f (x_i)\\
+		x_i = a + i \cdot h + \frac{h}{2}
+	\end{cases}
+\end{equation}
+
+где $N$ --- количество отрезков интегрирования, а $h = (b - a) / N$
+
+Ступенчатая (stair"=case) аппроксимация гладких изогнутых поверхностей, возникает
+в результате дискретизации модели прямоугольной сеткой. Для борьбы со
+ступенчатой аппроксимацией может использоваться, например, квадратурная формула
+Симпсона:
+
+\begin{equation}
+	\int_{a}^{b} f(x)\,dx \approx \frac{h}{3} [ \,f(a) + f(b) + 4 \sum_{k = 1}^{N} f(a + (2k - 1)h) + 2 \sum_{k = 1}^{N - 1} f(a + 2kh)] \,
+\end{equation}
+
+где $h = \frac{b - a}{2N}, N \gg 1$.
+
+Формула Симпсона геометрически заключается в том, что через три
+ординаты, отвечающие трем последовательным узлам сетки, проводится
+парабола и затем складываются получившиеся при этом площади
+элементарных криволинейных трапеций.
+
+\subsection*{Реализация}
+
+Код решения приведен ниже:
+
+\begin{minted}{cpp}
+#include <iostream>
+#include <omp.h>
+#include <time.h>
+#define PI 3.1415926535897932384626433832795
+
+using namespace std;
+
+double f1(double x) {
+	return 1.0 / (1 + x * x);
+}
+
+void integral_posl(const double a, const double b, const double h, double* res) {
+	double sum = 0;
+	int n = (int)((b - a) / h);
+
+	for (int i = 0; i < n; ++i) {
+		double x = a + i * h + h / 2;
+		sum += f1(x) * h;
+	}
+
+	*res = sum;
+}
+
+void integral_paral(const double a, const double b, const double h, double* res) {
+	double sum = 0;
+	int n = (int)((b - a) / h);
+
+	#pragma omp parallel for reduction(+: sum)
+	for (int i = 0; i < n; ++i) {
+		double x = a + i * h + h / 2;
+		sum += f1(x) * h;
+	}
+
+	*res = sum;
+}
+
+void integral_Simpson(const double a, const double b, const double h, double* res) {
+	double sum = f1(a) + f1(b);
+	int n = (int)((b - a) / 2 * h);
+
+	#pragma omp parallel for reduction(+: sum)
+	for (int i = 1; i <= n; ++i) {
+		double x = a + h * (2 * i - 1);
+		sum += f1(x) * 4;
+	}
+
+	#pragma omp parallel for reduction(+: sum)
+	for (int i = 1; i < n; ++i) {
+		double x = a + 2 * i * h;
+		sum += 2 * f1(x);
+	}
+
+	*res = h / 3 * sum;
+}
+
+double experiment(double* res, void f(const double a, const double b, const double h, double* res)) {
+	double stime = 0, ftime = 0;
+	double a = 0;
+	double b = 1e+6;
+	double h = 0.01;
+	stime = clock();
+	f(a, b, h, res);
+	ftime = clock();
+
+	return (ftime - stime) / CLOCKS_PER_SEC;
+}
+
+void calculate(void f(const double a, const double b, const double h, double* res)) {
+	double avg_time = 0;
+	double min_time = 0;
+	double max_time = 0;
+	double res = 0;
+	int numbExp = 10;
+
+	min_time = max_time = experiment(&res, f);
+	avg_time = min_time / numbExp;
+	for (int i = 0; i < numbExp - 1; ++i) {
+		double time = experiment(&res, f);
+		if (time > max_time)
+			max_time = time;
+		if (time < min_time)
+			min_time = time;
+
+		avg_time += time / numbExp;
+	}
+
+	cout << "Execution time: " << avg_time << "; " << min_time << "; " << max_time << "\n";
+	cout.precision(8);
+	cout << "Integral value: " << res << "\n";
+}
+
+int main() {
+	
+	bool calcPosl = true, calcParal = true, calcSimpson = true;
+
+	// Последовательное вычисление
+
+	if (calcPosl) {
+		cout << "Posl:\n";
+		calculate(integral_posl);
+		cout << "\n";
+	}
+
+	// Параллельное вычисление
+	
+	if (calcParal) {
+		cout << "Paral:\n";
+		calculate(integral_paral);
+		cout << "\n";
+	}
+
+	// Параллельное вычисление по формуле Симпсона
+
+	if (calcSimpson) {
+		cout << "Simpson:\n";
+		calculate(integral_Simpson);
+		cout << "\n";
+	}
+
+	system("pause");
+	return 0;
+}
+\end{minted}
+
+\subsection*{Результаты работы}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth]{work-1.png}
+	\caption{Work-1}
+\end{figure}
+
+Значение ускорения выполнения программы при переходе к многопоточной версии:
+\[a = \frac{timeSeq}{timePar} = \frac{1.8986}{0.2409} \approx 7.8812\]
+
+\section{Work 02}
+
+\subsection*{Задание}
+Модифицируйте разработанную ранее программу по методу прямоугольников  для
+численного интегрирования тестовой функции:
+
+\begin{equation}
+	\int_{0}^{16}\int_{0}^{16} \frac{e^{\cos(\pi x)\sin(\pi y)} + 1}{(b_1 - a_1)(b_2 - a_2)}\,dx\,dy \approx 2.130997
+\end{equation}
+Предложите несколько способов распараллеливания базового алгоритма метода
+прямоугольников для двумерной функции с использованием директивы 
+\newline \#pragma omp parallel for.
+Реализуйте предложенные способы на примере тестовой функции.
+Сравните время численного интегрирования для последовательной и параллельных
+реализаций и параллельных реализаций между собой.
+
+\subsection*{Численное интегрирование по методу прямоугольников для
+двумерной функции}
+
+\begin{equation}
+    \begin{cases}
+		J = \int_{a_1}^{b_1} \int_{a_2}^{b_2} f(x, y)\,dx \,dy \approx \sum_{i = 0}^{N - 1} \sum_{j = 0}^{M - 1} (h_1 \cdot h_2 \cdot f (x_i, y_i))\\
+		x_i = a_1 + i \cdot h_1 + \frac{h_1}{2}\\
+		y_i = a_2 + i \cdot h_2 + \frac{h_2}{2}
+	\end{cases}
+\end{equation}
+
+где $N$ --- количество отрезков интегрирования по оси $x$, $M$ --- количество
+отрезков интегрирования по оси $y$, $h_1 = (b_1 - a_1) / N$ и $h_2 = (b_2 - a_2) / N$.
+
+\subsection*{Реализация}
+
+Фрагмент кода решения приведен ниже:
+
+\begin{minted}{cpp}
+#include <iostream>
+#include <omp.h>
+#include <time.h>
+#include <cmath>
+#define PI 3.1415926535897932384626433832795
+
+using namespace std;
+
+double f1(const double x, const double y, const double a1, const double b1, const double a2, const double b2) {
+	return (1 + exp(sin(PI * x) * cos(PI * y))) / (b1 - a1) / (b2 - a2);
+}
+
+void integral_posl(const double a1, const double b1, const double a2, const double b2, const double h1, const double h2, double* res) {
+	double sum = 0;
+	int n = (int)((b1 - a1) / h1);
+	int m = (int)((b2 - a2) / h2);
+
+	for (int i = 0; i < n; ++i) {
+		double x = a1 + i * h1 + h1 / 2;
+		for (int j = 0; j < m; ++j) {
+			double y = a2 + j * h2 + h2 / 2;
+			sum += f1(x, y, a1, b1, a2, b2) * h1 * h2;
+		}
+	}
+
+	*res = sum;
+}
+
+void integral_paral_1(const double a1, const double b1, const double a2, const double b2, const double h1, const double h2, double* res) {
+	double sum = 0;
+	int n = (int)((b1 - a1) / h1);
+	int m = (int)((b2 - a2) / h2);
+
+	#pragma omp parallel for reduction(+: sum)
+	for (int i = 0; i < n; ++i) {
+		double x = a1 + i * h1 + h1 / 2;
+		for (int j = 0; j < m; ++j) {
+			double y = a2 + j * h2 + h2 / 2;
+			sum += f1(x, y, a1, b1, a2, b2) * h1 * h2;
+		}
+	}
+
+	*res = sum;
+}
+
+void integral_paral_2(const double a1, const double b1, const double a2, const double b2, const double h1, const double h2, double* res) {
+	double sum = 0;
+	int n = (int)((b1 - a1) / h1);
+	int m = (int)((b2 - a2) / h2);
+
+	#pragma omp parallel for reduction(+: sum)
+	for (int i = 0; i < n; ++i) {
+		double x = a1 + i * h1 + h1 / 2;
+		#pragma omp parallel for reduction(+: sum)
+		for (int j = 0; j < m; ++j) {
+			double y = a2 + j * h2 + h2 / 2;
+			sum += f1(x, y, a1, b1, a2, b2) * h1 * h2;
+		}
+	}
+
+	*res = sum;
+}
+
+double experiment(double* res, void f(const double a1, const double b1, const double a2, const double b2, const double h1, const double h2, double* res)) {
+	double stime = 0, ftime = 0;
+	double a1 = 0, b1 = 16;
+	double a2 = 0, b2 = 16;
+	double h1 = 0.005, h2 = 0.005;
+	stime = clock();
+	f(a1, b1, a2, b2, h1, h2, res);
+	ftime = clock();
+
+	return (ftime - stime) / CLOCKS_PER_SEC;
+}
+
+void calculate(void f(const double a1, const double b1, const double a2, const double b2, const double h1, const double h2, double* res)) {
+	double avg_time = 0;
+	double min_time = 0;
+	double max_time = 0;
+	double res = 0;
+	int numbExp = 10;
+
+	min_time = max_time = experiment(&res, f);
+	avg_time = min_time / numbExp;
+	for (int i = 0; i < numbExp - 1; ++i) {
+		double time = experiment(&res, f);
+		if (time > max_time)
+			max_time = time;
+		if (time < min_time)
+			min_time = time;
+
+		avg_time += time / numbExp;
+	}
+
+	cout << "Execution time: " << avg_time << "; " << min_time << "; " << max_time << "\n";
+	cout.precision(8);
+	cout << "Integral value: " << res << "\n";
+}
+
+int main() {
+
+	bool calcPosl = true, calcParal_1 = true, calcParal_2 = true;
+
+	// Последовательное вычисление
+
+	if (calcPosl) {
+		cout << "Posl:\n";
+		calculate(integral_posl);
+		cout << "\n";
+	}
+
+	// Параллельное вычисление (1)
+
+	if (calcParal_1) {
+		cout << "Paral_1:\n";
+		calculate(integral_paral_1);
+		cout << "\n";
+	}
+
+	// Параллельное вычисление (2)
+
+	if (calcParal_2) {
+		cout << "Paral_2:\n";
+		calculate(integral_paral_2);
+		cout << "\n";
+	}
+
+	system("pause");
+	return 0;
+}
+\end{minted}
+
+\subsection*{Результаты работы}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth]{work-2.png}
+	\caption{Work-2}
+\end{figure}
+
+\section{Work 03}
+
+\subsection*{Задание}
+
+Реализовать параллельно один из методов приближенного вычисления двойных
+интегралов, а именно метод статистических испытаний.
+
+\subsection*{Метод трапеций}
+
+Пусть и по направлению $x$, и по направлению
+$y$ для приближенного вычисления применяется формула трапеций.
+
+\[ F(y_j) \approx h_1 * \sum{i = 0}{m} q_{1, i} * f(x_i, y_j) \]
+
+где $q_{1, i} = 0.5$, при $i = 0$ и $i = m$; $q_{1, i} = 1$, при $i = 1, 2, \dots, m - 1$
+
+и 
+
+\[ J \approx h_2 * \sum{j = 0}{n} q_{2, j * F(y_j)}\]
+
+где $q_{2, j} = 0.5$, при $j = 0$ и $j = n$; $q_{2, j} = 1$, при $j = 1, 2, \dots, n - 1$
+
+Тогда
+
+\[ J \approx h_1 * h_2 * \sum{i = 0}{m} \sum{j = 0}{n} q_{ij} * f(x_i, y_j) \]
+
+где $q_{ij} = q_{1, i} * q_{2, j}$
+
+\subsection*{Реализация}
+
+Фрагмент кода решения приведен ниже:
+
+\begin{minted}{cpp}
+#include <iostream>
+#include <omp.h>
+#include <time.h>
+#include <cmath>
+#define PI 3.1415926535897932384626433832795
+
+using namespace std;
+
+double f1(const double x, const double y, const double a1, const double b1, const double a2, const double b2) {
+	return (1 + exp(sin(PI * x) * cos(PI * y))) / (b1 - a1) / (b2 - a2);
+}
+
+double q(int i, int j, int n, int m) {
+	double q = 1;
+	if (i == 0 || i == n)
+		q *= 0.5;
+	if (j == 0 || j == m)
+		q *= 0.5;
+	return q;
+}
+
+void integral(const double a1, const double b1, const double a2, const double b2, const double h1, const double h2, double* res) {
+	double sum = 0;
+	int n = (int)((b1 - a1) / h1);
+	int m = (int)((b2 - a2) / h2);
+
+	#pragma omp parallel for reduction(+: sum)
+	for (int i = 0; i <= n; ++i) {
+		double x = a1 + i * h1 + h1 / 2;
+		for (int j = 0; j <= m; ++j) {
+			double y = a2 + j * h2 + h2 / 2;
+			sum += f1(x, y, a1, b1, a2, b2) * h1 * h2 * q(i, j, n, m);
+		}
+	}
+
+	*res = sum;
+}
+
+double experiment(double* res, void f(const double a1, const double b1, const double a2, const double b2, const double h1, const double h2, double* res)) {
+	double stime = 0, ftime = 0;
+	double a1 = 0, b1 = 16;
+	double a2 = 0, b2 = 16;
+	double h1 = 0.005, h2 = 0.005;
+	stime = clock();
+	f(a1, b1, a2, b2, h1, h2, res);
+	ftime = clock();
+
+	return (ftime - stime) / CLOCKS_PER_SEC;
+}
+
+void calculate(void f(const double a1, const double b1, const double a2, const double b2, const double h1, const double h2, double* res)) {
+	double avg_time = 0;
+	double min_time = 0;
+	double max_time = 0;
+	double res = 0;
+	int numbExp = 10;
+
+	min_time = max_time = experiment(&res, f);
+	avg_time = min_time / numbExp;
+	for (int i = 0; i < numbExp - 1; ++i) {
+		double time = experiment(&res, f);
+		if (time > max_time)
+			max_time = time;
+		if (time < min_time)
+			min_time = time;
+
+		avg_time += time / numbExp;
+	}
+
+	cout << "Execution time: " << avg_time << "; " << min_time << "; " << max_time << "\n";
+	cout.precision(8);
+	cout << "Integral value: " << res << "\n";
+}
+
+int main() {
+
+	calculate(integral); 
+	cout << "\n";
+
+	system("pause");
+	return 0;
+}
+\end{minted}
+
+\subsection*{Результат работы}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth]{work-3.png}
+	\caption{Work-3}
+\end{figure}
+
+\end{document}
