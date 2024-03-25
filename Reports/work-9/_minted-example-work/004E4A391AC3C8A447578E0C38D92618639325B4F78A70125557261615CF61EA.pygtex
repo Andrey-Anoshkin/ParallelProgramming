@@ -1,0 +1,123 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kt}{void} \PYG{n+nf}{MyDataInitialization}\PYG{p}{(}\PYG{n}{complex}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{double}\PYG{o}{\PYGZgt{}*} \PYG{n}{mas}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{size}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+	\PYG{k+kt}{int} \PYG{n}{task} \PYG{o}{=} \PYG{l+m+mi}{2}\PYG{p}{;}
+	\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZlt{}} \PYG{n}{size}\PYG{p}{;} \PYG{o}{++}\PYG{n}{i}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+		\PYG{k}{switch} \PYG{p}{(}\PYG{n}{task}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+			\PYG{k}{case} \PYG{l+m+mi}{1}\PYG{o}{:} \PYG{n}{mas}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]} \PYG{o}{=} \PYG{n}{sin}\PYG{p}{(}\PYG{l+m+mi}{2} \PYG{o}{*} \PYG{n}{PI} \PYG{o}{*} \PYG{l+m+mi}{10} \PYG{o}{*} \PYG{l+m+mf}{1.0} \PYG{o}{/} \PYG{n}{size} \PYG{o}{*} \PYG{l+m+mi}{0}\PYG{p}{);} \PYG{n}{mas}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{=} \PYG{n}{sin}\PYG{p}{(}\PYG{l+m+mi}{2} \PYG{o}{*} \PYG{n}{PI} \PYG{o}{*} \PYG{l+m+mi}{10} \PYG{o}{*} \PYG{l+m+mf}{1.0} \PYG{o}{/} \PYG{n}{size} \PYG{o}{*} \PYG{n}{i}\PYG{p}{);} \PYG{k}{break}\PYG{p}{;}
+			\PYG{k}{case} \PYG{l+m+mi}{2}\PYG{o}{:} \PYG{n}{mas}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{p}{;} \PYG{n}{mas}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{n}{log}\PYG{p}{(}\PYG{l+m+mi}{2} \PYG{o}{*} \PYG{n}{sin}\PYG{p}{(}\PYG{n}{PI} \PYG{o}{*} \PYG{l+m+mf}{1.0} \PYG{o}{/} \PYG{n}{size} \PYG{o}{*} \PYG{n}{i}\PYG{p}{));} \PYG{k}{break}\PYG{p}{;}
+		\PYG{p}{\PYGZcb{}}
+	\PYG{p}{\PYGZcb{}}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{k+kt}{double} \PYG{n+nf}{calcFun}\PYG{p}{(}\PYG{k+kt}{double} \PYG{n}{t}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+	\PYG{k+kt}{double} \PYG{n}{sum} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+	\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZlt{}} \PYG{l+m+mi}{1000}\PYG{p}{;} \PYG{o}{++}\PYG{n}{i}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+		\PYG{n}{sum} \PYG{o}{+=} \PYG{n}{cos}\PYG{p}{(}\PYG{n}{i} \PYG{o}{*} \PYG{l+m+mi}{2} \PYG{o}{*} \PYG{n}{PI} \PYG{o}{*} \PYG{n}{t}\PYG{p}{)} \PYG{o}{/} \PYG{n}{i}\PYG{p}{;}
+	\PYG{p}{\PYGZcb{}}
+
+	\PYG{k}{return} \PYG{n}{sum}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{k+kt}{int} \PYG{n+nf}{main}\PYG{p}{()} \PYG{p}{\PYGZob{}}
+	\PYG{n}{complex}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{double}\PYG{o}{\PYGZgt{}*} \PYG{n}{inputSignal} \PYG{o}{=} \PYG{n+nb}{NULL}\PYG{p}{;}
+	\PYG{n}{complex}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{double}\PYG{o}{\PYGZgt{}*} \PYG{n}{outputSignal} \PYG{o}{=} \PYG{n+nb}{NULL}\PYG{p}{;}
+	\PYG{k+kt}{int} \PYG{n}{size} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+	\PYG{k}{const} \PYG{k+kt}{int} \PYG{n}{repeatCount} \PYG{o}{=} \PYG{l+m+mi}{16}\PYG{p}{;}
+	\PYG{k+kt}{double} \PYG{n}{startTime}\PYG{p}{;}
+	\PYG{k+kt}{double} \PYG{n}{duration}\PYG{p}{;}
+	\PYG{k+kt}{double} \PYG{n}{minDuration} \PYG{o}{=} \PYG{n}{DBL\PYGZus{}MAX}\PYG{p}{;}
+
+	\PYG{k+kt}{bool} \PYG{n}{serial} \PYG{o}{=} \PYG{n+nb}{false}\PYG{p}{;}
+	\PYG{k+kt}{bool} \PYG{n}{parallel} \PYG{o}{=} \PYG{n+nb}{true}\PYG{p}{;}
+	\PYG{k+kt}{bool} \PYG{n}{test} \PYG{o}{=} \PYG{n+nb}{false}\PYG{p}{;}
+	
+	\PYG{n}{cout} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+s}{\PYGZdq{}Fast Fourier Transform\PYGZdq{}} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{endl}\PYG{p}{;}
+
+	\PYG{k}{if} \PYG{p}{(}\PYG{n}{serial}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+		\PYG{n}{cout} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+s}{\PYGZdq{}Serial:}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{;}
+		\PYG{c+c1}{// Memory allocation and data initialization}
+		\PYG{n}{ProcessInitialization}\PYG{p}{(}\PYG{n}{inputSignal}\PYG{p}{,} \PYG{n}{outputSignal}\PYG{p}{,} \PYG{n}{size}\PYG{p}{);}
+		\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZlt{}} \PYG{n}{repeatCount}\PYG{p}{;} \PYG{n}{i}\PYG{o}{++}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+			\PYG{n}{startTime} \PYG{o}{=} \PYG{n}{clock}\PYG{p}{();}
+
+			\PYG{c+c1}{// FFT computation}
+			\PYG{n}{SerialFFT}\PYG{p}{(}\PYG{n}{inputSignal}\PYG{p}{,} \PYG{n}{outputSignal}\PYG{p}{,} \PYG{n}{size}\PYG{p}{);}
+			\PYG{n}{duration} \PYG{o}{=} \PYG{p}{(}\PYG{n}{clock}\PYG{p}{()} \PYG{o}{\PYGZhy{}} \PYG{n}{startTime}\PYG{p}{)} \PYG{o}{/} \PYG{n}{CLOCKS\PYGZus{}PER\PYGZus{}SEC}\PYG{p}{;}
+			\PYG{k}{if} \PYG{p}{(}\PYG{n}{duration} \PYG{o}{\PYGZlt{}} \PYG{n}{minDuration}\PYG{p}{)}
+				\PYG{n}{minDuration} \PYG{o}{=} \PYG{n}{duration}\PYG{p}{;}
+		\PYG{p}{\PYGZcb{}}
+		\PYG{n}{cout} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{setprecision}\PYG{p}{(}\PYG{l+m+mi}{6}\PYG{p}{);}
+		\PYG{n}{cout} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+s}{\PYGZdq{}Execution time is \PYGZdq{}} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{minDuration} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+s}{\PYGZdq{} s. \PYGZdq{}} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{endl}\PYG{p}{;}
+
+		\PYG{c+c1}{// Result signal output}
+		\PYG{c+c1}{//PrintSignal(outputSignal, size);}
+
+		\PYG{c+c1}{// Computational process termination}
+		\PYG{n}{ProcessTermination}\PYG{p}{(}\PYG{n}{inputSignal}\PYG{p}{,} \PYG{n}{outputSignal}\PYG{p}{);}
+		\PYG{n}{cout} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{;}
+	\PYG{p}{\PYGZcb{}}
+	
+	\PYG{k}{if} \PYG{p}{(}\PYG{n}{parallel}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+		\PYG{n}{cout} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+s}{\PYGZdq{}Parallel:}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{;}
+		\PYG{n}{ProcessInitialization}\PYG{p}{(}\PYG{n}{inputSignal}\PYG{p}{,} \PYG{n}{outputSignal}\PYG{p}{,} \PYG{n}{size}\PYG{p}{);}
+		\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZlt{}} \PYG{n}{repeatCount}\PYG{p}{;} \PYG{n}{i}\PYG{o}{++}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+			\PYG{n}{startTime} \PYG{o}{=} \PYG{n}{clock}\PYG{p}{();}
+
+			\PYG{c+c1}{// FFT computation}
+			\PYG{n}{ParallelFFT}\PYG{p}{(}\PYG{n}{inputSignal}\PYG{p}{,} \PYG{n}{outputSignal}\PYG{p}{,} \PYG{n}{size}\PYG{p}{);}
+			\PYG{n}{duration} \PYG{o}{=} \PYG{p}{(}\PYG{n}{clock}\PYG{p}{()} \PYG{o}{\PYGZhy{}} \PYG{n}{startTime}\PYG{p}{)} \PYG{o}{/} \PYG{n}{CLOCKS\PYGZus{}PER\PYGZus{}SEC}\PYG{p}{;}
+			\PYG{k}{if} \PYG{p}{(}\PYG{n}{duration} \PYG{o}{\PYGZlt{}} \PYG{n}{minDuration}\PYG{p}{)}
+				\PYG{n}{minDuration} \PYG{o}{=} \PYG{n}{duration}\PYG{p}{;}
+		\PYG{p}{\PYGZcb{}}
+		\PYG{n}{cout} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{setprecision}\PYG{p}{(}\PYG{l+m+mi}{6}\PYG{p}{);}
+		\PYG{n}{cout} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+s}{\PYGZdq{}Execution time is \PYGZdq{}} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{minDuration} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+s}{\PYGZdq{} s. \PYGZdq{}} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{endl}\PYG{p}{;}
+
+		\PYG{c+c1}{// Result signal output}
+		\PYG{c+c1}{//PrintSignal(outputSignal, size);}
+
+		\PYG{c+c1}{// ========================================== Task\PYGZhy{}1 ===================================================}
+
+		\PYG{c+cm}{/*vector\PYGZlt{}double\PYGZgt{} A(size);}
+\PYG{c+cm}{		double norm = 0;}
+\PYG{c+cm}{		for (int i = 0; i \PYGZlt{} size; ++i) \PYGZob{}}
+\PYG{c+cm}{			A[i] = (outputSignal[i].real() * outputSignal[i].real() * 4) + (outputSignal[i].imag() * outputSignal[i].imag() * 4);}
+\PYG{c+cm}{			norm += A[i];}
+\PYG{c+cm}{			A[i] = sqrt(A[i]);}
+\PYG{c+cm}{		\PYGZcb{}}
+
+\PYG{c+cm}{		norm = sqrt(norm);}
+\PYG{c+cm}{		for (int i = 0; i \PYGZlt{} size; ++i) \PYGZob{}}
+\PYG{c+cm}{			A[i] /= norm;}
+\PYG{c+cm}{			cout \PYGZlt{}\PYGZlt{} A[i] \PYGZlt{}\PYGZlt{} \PYGZdq{}\PYGZbs{}n\PYGZdq{};}
+\PYG{c+cm}{		\PYGZcb{}}
+
+\PYG{c+cm}{		cout \PYGZlt{}\PYGZlt{} \PYGZdq{}\PYGZbs{}n\PYGZdq{};*/}
+
+		\PYG{c+c1}{// ========================================== Task\PYGZhy{}2 ===================================================}
+
+		\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{double} \PYG{n}{t} \PYG{o}{=} \PYG{l+m+mf}{1.0} \PYG{o}{/} \PYG{n}{size}\PYG{p}{;} \PYG{n}{t} \PYG{o}{\PYGZlt{}} \PYG{l+m+mi}{1}\PYG{p}{;} \PYG{n}{t} \PYG{o}{+=} \PYG{l+m+mf}{100.0} \PYG{o}{/} \PYG{n}{size}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+			\PYG{n}{cout} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+s}{\PYGZdq{}t = \PYGZdq{}} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{t} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{;}
+			\PYG{n}{cout} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+s}{\PYGZdq{}Accurate value: \PYGZdq{}} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{o}{\PYGZhy{}}\PYG{n}{log}\PYG{p}{(}\PYG{l+m+mi}{2} \PYG{o}{*} \PYG{n}{sin}\PYG{p}{(}\PYG{n}{PI} \PYG{o}{*} \PYG{n}{t}\PYG{p}{))} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{;}
+			\PYG{k+kt}{double} \PYG{n}{sum} \PYG{o}{=} \PYG{n}{outputSignal}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{].}\PYG{n}{real}\PYG{p}{()} \PYG{o}{/} \PYG{n}{size}\PYG{p}{;}
+			\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZlt{}} \PYG{n}{size} \PYG{o}{/} \PYG{l+m+mi}{2}\PYG{p}{;} \PYG{o}{++}\PYG{n}{i}\PYG{p}{)}
+				\PYG{n}{sum} \PYG{o}{+=} \PYG{n}{outputSignal}\PYG{p}{[}\PYG{n}{i}\PYG{p}{].}\PYG{n}{real}\PYG{p}{()} \PYG{o}{*} \PYG{l+m+mi}{2} \PYG{o}{*} \PYG{n}{cos}\PYG{p}{(}\PYG{n}{i} \PYG{o}{*} \PYG{l+m+mi}{2} \PYG{o}{*} \PYG{n}{PI} \PYG{o}{*} \PYG{n}{t}\PYG{p}{)} \PYG{o}{/} \PYG{n}{size} \PYG{o}{+} \PYG{n}{outputSignal}\PYG{p}{[}\PYG{n}{i}\PYG{p}{].}\PYG{n}{imag}\PYG{p}{()} \PYG{o}{*} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{2} \PYG{o}{*} \PYG{n}{sin}\PYG{p}{(}\PYG{n}{i} \PYG{o}{*} \PYG{l+m+mi}{2} \PYG{o}{*} \PYG{n}{PI} \PYG{o}{*} \PYG{n}{t}\PYG{p}{)} \PYG{o}{/} \PYG{n}{size}\PYG{p}{;}
+
+			\PYG{n}{cout} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+s}{\PYGZdq{}Fourier value: \PYGZdq{}} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{calcFun}\PYG{p}{(}\PYG{n}{t}\PYG{p}{)} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{;}
+			\PYG{n}{cout} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+s}{\PYGZdq{}Calculated value: \PYGZdq{}} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{sum} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{;}
+		\PYG{p}{\PYGZcb{}}
+
+		\PYG{c+c1}{// Computational process termination}
+		\PYG{n}{ProcessTermination}\PYG{p}{(}\PYG{n}{inputSignal}\PYG{p}{,} \PYG{n}{outputSignal}\PYG{p}{);}
+	\PYG{p}{\PYGZcb{}}
+
+	\PYG{k}{if} \PYG{p}{(}\PYG{n}{test}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+		\PYG{n}{ProcessInitialization}\PYG{p}{(}\PYG{n}{inputSignal}\PYG{p}{,} \PYG{n}{outputSignal}\PYG{p}{,} \PYG{n}{size}\PYG{p}{);}
+		\PYG{n}{ParallelFFT}\PYG{p}{(}\PYG{n}{inputSignal}\PYG{p}{,} \PYG{n}{outputSignal}\PYG{p}{,} \PYG{n}{size}\PYG{p}{);}
+		\PYG{n}{PrintSignal}\PYG{p}{(}\PYG{n}{outputSignal}\PYG{p}{,} \PYG{n}{size}\PYG{p}{);}
+		\PYG{n}{TestResult}\PYG{p}{(}\PYG{n}{inputSignal}\PYG{p}{,} \PYG{n}{outputSignal}\PYG{p}{,} \PYG{n}{size}\PYG{p}{);}
+		\PYG{n}{ProcessTermination}\PYG{p}{(}\PYG{n}{inputSignal}\PYG{p}{,} \PYG{n}{outputSignal}\PYG{p}{);}
+	\PYG{p}{\PYGZcb{}}
+
+	\PYG{k}{return} \PYG{l+m+mi}{0}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+\end{Verbatim}

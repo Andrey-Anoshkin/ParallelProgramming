@@ -1,0 +1,605 @@
+\documentclass[bachelor, och, referat]{SCWorks}
+
+\usepackage[T2A]{fontenc}
+\usepackage[cp1251]{inputenc}
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage[sort,compress]{cite}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{fancyvrb}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage[english,russian]{babel}
+\usepackage{tempora}
+\usepackage{minted}
+\usepackage{import}
+\graphicspath{ {./images/} }
+%\definecolor{codebg}{rgb}{0.9,0.9,0.9} %описание собственного цвета (почти
+%белый) \setminted{         % установка параметров по умолчанию для команд
+%бибилиотеки minted bgcolor=codebg, % установка цвета фона программного кода
+%linenos=true,   % включение номеров строк в листингах numbersep=5pt,  %
+%промежуток между номерами строк и началом строк листинга breaklines}     %
+%автоматические переносы строк (когда строки не умещаются)
+
+\usemintedstyle{bw} % включение черно-белого стиля программного кода
+	
+
+\usepackage[hidelinks]{hyperref}
+
+\setminted{
+	style=bw,
+	framesep=2mm, 
+	baselinestretch=1.2, 
+	fontsize=\footnotesize, 
+	linenos,
+	breaklines=true
+}
+
+\newcommand{\eqdef}{\stackrel {\rm def}{=}}
+
+\newtheorem{lem}{Лемма}
+
+\begin{document}
+
+% Кафедра (в родительном падеже)
+\chair{математической кибернетики и компьютерных наук}
+
+% Тема работы
+\title{Численное решение систем линейных алгебраических уравнений методом исключения Гаусса и итерационными методами}
+
+% Курс
+\course{3}
+
+% Группа
+\group{311}
+
+% Факультет (в родительном падеже) (по умолчанию "факультета КНиИТ")
+%\department{факультета КНиИТ}
+
+% Специальность/направление код - наименование
+\napravlenie{02.03.02 "--- Фундаментальная информатика и информационные технологии}
+
+% Для студентки. Для работы студента следующая команда не нужна.
+\studenttitle{Студента}
+
+% Фамилия, имя, отчество в родительном падеже
+\author{Аношкина Андрея Алексеевича}
+
+% Заведующий кафедрой
+\chtitle{к.\,ф.-м.\,н., доцент} % степень, звание
+\chname{С.\,В.\,Миронов}
+
+%Научный руководитель (для реферата преподаватель проверяющий работу)
+%!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+\satitle{Старший преподаватель} %должность, степень, звание
+\saname{М.\,С.\,Портенко}
+
+% Руководитель практики от организации (только для практики, для остальных типов
+% работ не используется)
+\patitle{к.\,ф.-м.\,н., доцент}
+\paname{Д.\,Ю.\,Петров}
+
+% Семестр (только для практики, для остальных типов работ не используется)
+\term{6}
+
+% Наименование практики (только для практики, для остальных типов работ не
+% используется)
+\practtype{учебная}
+
+% Продолжительность практики (количество недель) (только для практики, для
+% остальных типов работ не используется)
+\duration{2}
+
+% Даты начала и окончания практики (только для практики, для остальных типов
+% работ не используется)
+\practStart{01.07.2016} \practFinish{14.07.2016}
+
+% Год выполнения отчета
+\date{2024}
+
+\maketitle
+
+\tableofcontents
+
+\section{Work 06}
+
+\subsection*{Задание}
+
+Выполните разработку параллельного варианта для одного из итерационных методов "--- верхней релаксации.
+
+Для тестовой матрицы из нулей и единиц проведите вычислительные эксперименты, результаты занесите в таблицу~1.
+
+Какой из алгоритмов Гаусса или итерационный обладает лучшими показателями ускорения? Заполните таблицу~2.
+
+\subsection*{Определение задачи решения системы линейных уравнений}
+
+Множество $n$ линейных уравнений:
+
+\begin{equation*}
+\begin{cases}
+a_{11}x_1 + a_{12}x_2 + \dots + a_{1n}x_n = b_1\\
+a_{21}x_1 + a_{22}x_2 + \dots + a_{2n}x_n = b_2\\
+\dots\\
+a_{n1}x_1 + a_{n2}x_2 + \dots + a_{nn}x_n = b_n\\
+\end{cases}
+\end{equation*}
+
+называется системой линейных уравнений или линейной системой.
+
+В более кратком (матричном) виде система может быть представлена как $Ax = b$, где $A = (a_{ij})$ есть вещественная матрица размера $n\times n$, а вектора
+$b$ и $x$ состоят из элементов.
+
+Под задачей решения системы линейных уравнений для заданных
+матрицы $A$ и вектора $b$ обычно понимается нахождение значения вектора
+неизвестных $x$, при котором выполняются все уравнения системы.
+
+\subsection*{Итерационные методы}
+
+Рассмотрим подход к решению систем линейных уравнений $Ax = b$ с
+невырожденной квадратной матрицей, при котором используя заданное
+начальное приближение $x^0$ строится последовательность приближенных
+решений $x^0, x^1, \dots, x^k, \dots$ до тех пор пока приближенное решение не будет
+найдено с требуемой точностью.
+
+Итерации заканчиваются, когда:
+\begin{itemize}
+\item норма невязки $\parallel b - Ax^k \parallel = max_{1 \leq i \leq n}|b_i - \sum_{j = 1}^{n} < \varepsilon|$ не станет малой;
+\item погрешность определения компонент решения $\parallel x^{k+1} - x^k \parallel < \varepsilon$, где через $\parallel \parallel$
+обозначена любая векторная норма, не станет малой;
+\item достигнуто максимальное число итераций $N$, на которое готов пойти
+исследователь;
+\item перечисленные критерии могут совмещаться
+\end{itemize}
+
+\subsection*{Метод верхней релаксации}
+
+Модификация метода Зейделя:
+\begin{equation*}
+x_i^{k + 1} = (1 - \omega) x^k_i + \omega \frac{b_i - \sum_{j = 1}^{i - 1}a_{ij}x_j^{k + 1} - \sum_{j = i + 1}^{n}a_{ij}x_j^k}{a_{ii}}, i = 1, 2, \dots, n; k = 0, 1, \dots
+\end{equation*}
+
+\subsection*{Последовательная реализация}
+
+Фрагмент кода решения приведен ниже:
+
+\begin{minted}{cpp}
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <time.h>
+#include <math.h>
+#include <algorithm>
+
+// Function for simple initialization of the matrix
+// and the vector elements
+void DummyDataInitialization(double* pMatrix, double* pVector, int Size) {
+	for (int i = 0; i < Size; ++i) {
+		pVector[i] = i + 1.0;
+		for (int j = 0; j < Size; ++j)
+			if (j <= i)
+				pMatrix[i * Size + j] = 1;
+			else
+				pMatrix[i * Size + j] = 0;
+	}
+}
+
+// Function for random initialization of the matrix
+// and the vector elements
+void RandomDataInitialization(double* pMatrix, double* pVector, int Size) {
+	srand(unsigned(clock()));
+	for (int i = 0; i < Size; ++i) {
+		pVector[i] = rand() / double(1000);
+		for (int j = 0; j < Size; ++j)
+			if (j <= i)
+				pMatrix[i * Size + j] = rand() / double(1000);
+			else
+				pMatrix[i * Size + j] = 0;
+	}
+}
+
+// Function for memory allocation and definition of the objectselements 
+void ProcessInitialization(double*& pMatrix, double*& pVector, double*& pResult, int& Size) {
+	// Setting the size of the matrix and the vector
+	do {
+		printf("\nEnter size of the matrix and the vector: ");
+		scanf_s("%d", &Size);
+		printf("\nChosen size = %d \n", Size);
+		if (Size <= 0)
+			printf("\nSize of objects must be greater than 0!\n");
+	} while (Size <= 0);
+
+
+	// Memory allocation
+	pMatrix = new double[Size * Size];
+	pVector = new double[Size];
+	pResult = new double[Size];
+
+	// Initialization of the matrix and the vector elements
+	DummyDataInitialization(pMatrix, pVector, Size);
+	//RandomDataInitialization(pMatrix, pVector, Size);
+}
+
+// Function for formatted matrix output
+void PrintMatrix(double* pMatrix, int RowCount, int ColCount) {
+	for (int i = 0; i < RowCount; ++i) {
+		for (int j = 0; j < ColCount; ++j)
+			printf("%7.4f ", pMatrix[i * RowCount + j]);
+		printf("\n");
+	}
+}
+
+// Function for formatted vector output
+void PrintVector(double* pVector, int Size) {
+	for (int i = 0; i < Size; ++i)
+		printf("%7.4f ", pVector[i]);
+}
+
+// Function for the execution of Gauss algorithm
+void ResultCalculation(double* pMatrix, double* pVector, double* pResult, int Size) {
+
+	for (int i = 0; i < Size; pResult[i] = pVector[i] / pMatrix[i * Size + i], ++i);
+	double maxDif = 1e+6;
+	double w = 1.5;
+	
+	for (; maxDif > 1e-9;) {
+		maxDif = 0;
+		double* pNew = new double[Size];
+		for (int i = 0; i < Size; ++i) {
+			double sum = 0;
+			for (int j = 0; j < Size; ++j) {
+				if (j < i)
+					sum += pMatrix[i * Size + j] * pNew[j];
+				else
+					if (j > i)
+						sum += pMatrix[i * Size + j] * pResult[j];
+			}
+			pNew[i] = (1 - w) * pResult[i] + w * (pVector[i] - sum) / pMatrix[i * Size + i];
+		}
+
+		for (int i = 0; i < Size; ++i) {
+			maxDif = std::max(maxDif, fabs(pNew[i] - pResult[i]));
+			pResult[i] = pNew[i];
+		}
+
+		delete[] pNew;
+	}
+}
+
+// Function for computational process termination
+void ProcessTermination(double* pMatrix, double* pVector, double* pResult) {
+	delete[] pMatrix;
+	delete[] pVector;
+	delete[] pResult;
+}
+
+// Function for testing the result
+void TestResult(double* pMatrix, double* pVector, double* pResult, int Size) {
+	/* Buffer for storing the vector, that is a result of multiplication
+	of the linear system matrix by the vector of unknowns */
+	double* pRightPartVector;
+
+	// Flag, that shows wheather the right parts vectors are identical or not
+	int equal = 0;
+	double Accuracy = 1e-3; // Comparison accuracy
+	pRightPartVector = new double[Size];
+	for (int i = 0; i < Size; ++i) {
+		pRightPartVector[i] = 0;
+		for (int j = 0; j < Size; ++j)
+			pRightPartVector[i] += pMatrix[i * Size + j] * pResult[j];
+	}
+
+	for (int i = 0; i < Size; i++)
+		if (fabs(pRightPartVector[i] - pVector[i]) > Accuracy)
+			equal = 1;
+
+	if (equal == 1)
+		printf("\nThe result of the parallel Gauss algorithm is NOT correct. Check your code.");
+	else
+		printf("\nThe result of the parallel Gauss algorithm is correct.");
+
+	delete[] pRightPartVector;
+}
+int main() {
+	double* pMatrix; // The matrix of the linear system
+	double* pVector; // The right parts of the linear system
+	double* pResult; // The result vector
+	int Size; // The sizes of the initial matrix and the vector
+	double start, finish, duration;
+	printf("Upper relaxation algorithm for solving linear systems\n");
+
+	// Memory allocation and definition of objects' elements
+	ProcessInitialization(pMatrix, pVector, pResult, Size);
+
+	// The matrix and the vector output
+	/*printf("Initial Matrix \n");
+	PrintMatrix(pMatrix, Size, Size);
+	printf("Initial Vector \n");
+	PrintVector(pVector, Size);*/
+
+	// Execution of Gauss algorithm
+	start = clock();
+	ResultCalculation(pMatrix, pVector, pResult, Size);
+	finish = clock();
+	duration = (finish - start) / CLOCKS_PER_SEC;
+
+	// Testing the result
+	TestResult(pMatrix, pVector, pResult, Size);
+
+	// Printing the result vector
+	/*printf("\nResult Vector: \n");
+	PrintVector(pResult, Size);*/
+
+	// Printing the execution time of Gauss method
+	printf("\nTime of execution: %f\n", duration);
+
+	// Computational process termination
+	ProcessTermination(pMatrix, pVector, pResult);
+
+	return 0;
+}
+\end{minted}
+
+\subsection*{Параллельная реализация}
+
+Фрагмент кода решения приведен ниже:
+
+\begin{minted}{cpp}
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <time.h>
+#include <math.h>
+#include <omp.h>
+#include <algorithm>
+
+// Function for simple initialization of the matrix
+// and the vector elements
+void DummyDataInitialization(double* pMatrix, double* pVector, int Size) {
+	for (int i = 0; i < Size; ++i) {
+		pVector[i] = i + 1.0;
+		for (int j = 0; j < Size; ++j)
+			if (j <= i)
+				pMatrix[i * Size + j] = 1;
+			else
+				pMatrix[i * Size + j] = 0;
+	}
+}
+
+// Function for random initialization of the matrix
+// and the vector elements
+void RandomDataInitialization(double* pMatrix, double* pVector, int Size) {
+	srand(unsigned(clock()));
+	for (int i = 0; i < Size; ++i) {
+		pVector[i] = rand() / double(1000);
+		for (int j = 0; j < Size; ++j)
+			if (j <= i)
+				pMatrix[i * Size + j] = rand() / double(1000);
+			else
+				pMatrix[i * Size + j] = 0;
+	}
+}
+
+// Function for memory allocation and definition of the objectselements 
+void ProcessInitialization(double*& pMatrix, double*& pVector, double*& pResult, int& Size) {
+	// Setting the size of the matrix and the vector
+	do {
+		printf("\nEnter size of the matrix and the vector: ");
+		scanf_s("%d", &Size);
+		printf("\nChosen size = %d \n", Size);
+		if (Size <= 0)
+			printf("\nSize of objects must be greater than 0!\n");
+	} while (Size <= 0);
+
+
+	// Memory allocation
+	pMatrix = new double[Size * Size];
+	pVector = new double[Size];
+	pResult = new double[Size];
+
+	// Initialization of the matrix and the vector elements
+	DummyDataInitialization(pMatrix, pVector, Size);
+	//RandomDataInitialization(pMatrix, pVector, Size);
+}
+
+// Function for formatted matrix output
+void PrintMatrix(double* pMatrix, int RowCount, int ColCount) {
+	for (int i = 0; i < RowCount; ++i) {
+		for (int j = 0; j < ColCount; ++j)
+			printf("%7.4f ", pMatrix[i * RowCount + j]);
+		printf("\n");
+	}
+}
+
+// Function for formatted vector output
+void PrintVector(double* pVector, int Size) {
+	for (int i = 0; i < Size; ++i)
+		printf("%7.4f ", pVector[i]);
+}
+
+// Function for the execution of Gauss algorithm
+void ParallelResultCalculation(double* pMatrix, double* pVector, double* pResult, int Size) {
+
+	for (int i = 0; i < Size; pResult[i] = pVector[i] / pMatrix[i * Size + i], ++i);
+	double maxDif = 1e+6;
+	double w = 1.5;
+
+	for (; maxDif > 1e-9;) {
+		maxDif = 0;
+		double* pNew = new double[Size];
+		#pragma omp parallel for
+		for (int i = 0; i < Size; ++i) {
+			double sum = 0;
+			for (int j = i + 1; j < Size; ++j)
+				sum += pMatrix[i * Size + j] * pResult[j];
+			
+			pNew[i] = (1 - w) * pResult[i] + w * (pVector[i] - sum) / pMatrix[i * Size + i];
+		}
+
+		for (int i = 0; i < Size; ++i) {
+			double sum = 0;
+			for (int j = 0; j < i; ++j)
+				sum += pMatrix[i * Size + j] * pNew[j];
+			pNew[i] += w * -sum / pMatrix[i * Size + i];
+		}
+
+		for (int i = 0; i < Size; ++i) {
+			maxDif = std::max(maxDif, fabs(pNew[i] - pResult[i]));
+			pResult[i] = pNew[i];
+		}
+
+		delete[] pNew;
+	}
+}
+
+// Function for computational process termination
+void ProcessTermination(double* pMatrix, double* pVector, double* pResult) {
+	delete[] pMatrix;
+	delete[] pVector;
+	delete[] pResult;
+}
+
+// Function for testing the result
+void TestResult(double* pMatrix, double* pVector, double* pResult, int Size) {
+	/* Buffer for storing the vector, that is a result of multiplication
+	of the linear system matrix by the vector of unknowns */
+	double* pRightPartVector;
+
+	// Flag, that shows wheather the right parts vectors are identical or not
+	int equal = 0;
+	double Accuracy = 1e-3; // Comparison accuracy
+	pRightPartVector = new double[Size];
+	for (int i = 0; i < Size; ++i) {
+		pRightPartVector[i] = 0;
+		for (int j = 0; j < Size; ++j)
+			pRightPartVector[i] += pMatrix[i * Size + j] * pResult[j];
+	}
+
+	for (int i = 0; i < Size; i++)
+		if (fabs(pRightPartVector[i] - pVector[i]) > Accuracy)
+			equal = 1;
+
+	if (equal == 1)
+		printf("\nThe result of the parallel Gauss algorithm is NOT correct. Check your code.");
+	else
+		printf("\nThe result of the parallel Gauss algorithm is correct.");
+
+	delete[] pRightPartVector;
+}
+int main() {
+	double* pMatrix; // The matrix of the linear system
+	double* pVector; // The right parts of the linear system
+	double* pResult; // The result vector
+	int Size; // The sizes of the initial matrix and the vector
+	double start, finish, duration;
+	printf("Parallel upper relaxation algorithm for solving linear systems\n");
+
+	// Memory allocation and definition of objects' elements
+	ProcessInitialization(pMatrix, pVector, pResult, Size);
+
+	// The matrix and the vector output
+	/*printf("Initial Matrix \n");
+	PrintMatrix(pMatrix, Size, Size);
+	printf("Initial Vector \n");
+	PrintVector(pVector, Size);*/
+
+	// Execution of Gauss algorithm
+	start = clock();
+	ParallelResultCalculation(pMatrix, pVector, pResult, Size);
+	finish = clock();
+	duration = (finish - start) / CLOCKS_PER_SEC;
+
+	// Testing the result
+	TestResult(pMatrix, pVector, pResult, Size);
+
+	// Printing the result vector
+	/*printf("\nResult Vector: \n");
+	PrintVector(pResult, Size);*/
+
+	// Printing the execution time of Gauss method
+	printf("\nTime of execution: %f\n", duration);
+
+	// Computational process termination
+	ProcessTermination(pMatrix, pVector, pResult);
+
+	return 0;
+}
+\end{minted}
+
+\subsection*{Результат работы}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth]{work-6.png}
+	\caption{Work"=6}
+\end{figure}
+
+\subsection*{Таблица сравнения}
+
+\begin{table}[H]
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+    \multirow{2}{*}{Номер теста} & \multirow{2}{*}{Порядок системы} & \multirow{2}{*}{Последовательный алгоритм} & \multicolumn{2}{|c|}{Параллельный алгоритм}\\
+    \cline{4-5}
+    & & & Время & Ускорение\\
+    \hline
+    1 & 10 & 0.000000 & 0.005000 & $\approx\infty$ \\
+    \hline
+    2 & 100 & 0.013000 & 0.021000 & $\approx 0.62$ \\
+    \hline
+    3 & 500 & 1.433000 & 0.996000 & $\approx 1.44$ \\
+    \hline
+    4 & 1000 & 11.130000 & 7.947000 & $\approx 1.40$ \\
+    \hline
+    5 & 1500 & 6.566000 & 4.659000 & $\approx 1.41$ \\
+    \hline
+    6 & 2000 & 11.663000 & 8.288000 & $\approx 1.41$ \\
+    \hline
+    7 & 2500 & 18.223000 & 13.031000 & $\approx 1.40$ \\
+    \hline
+    8 & 3000 & 26.308000 & 18.698000 & $\approx 1.41$ \\
+    \hline
+\end{tabular}
+}
+\label{table-1}
+\caption{Время выполнения последовательного и параллельного итерационного алгоритмов решения систем линейных уравнений и ускорение}
+\end{table}
+
+\begin{table}[H]
+    \resizebox{\textwidth}{!}{
+    \begin{tabular}{|c|c|c|c|}
+    \hline
+    Номер теста & Порядок системы & Ускорение алгоритма Гаусса & Ускорение итерационного алгоритма (3)\\
+    \hline
+    1 & 10 & $\approx\infty$ & $\approx\infty$\\
+    \hline
+    2 & 100 & $\approx 0.14$ & $\approx 0.62$\\
+    \hline
+    3 & 500 & $\approx 1.98$ & $\approx 1.44$\\
+    \hline
+    4 & 1000 & $\approx 3.59$ & $\approx 1.40$\\
+    \hline
+    5 & 1500 & $\approx 3.57$ & $\approx 1.41$\\
+    \hline
+    6 & 2000 & $\approx 4.22$ & $\approx 1.41$\\
+    \hline
+    7 & 2500 & $\approx 4.36$ & $\approx 1.40$\\
+    \hline
+    8 & 3000 & $\approx 4.14$ & $\approx 1.41$\\
+    \hline
+    \end{tabular}}
+    \label{table-2}
+    \caption{Ускорение параллельных алгоритмов Гаусса и итерационного (3) решения систем линейных уравнений}
+\end{table}
+
+\subsection*{Характеристики устройства}
+
+Процессор: Intel(R) Core(TM) i5"=10400F
+
+Ядер: 6
+
+Оперативная память: 16 Гб
+
+\end{document}

@@ -1,0 +1,238 @@
+\documentclass[bachelor, och, referat]{SCWorks}
+
+\usepackage[T2A]{fontenc}
+\usepackage[cp1251]{inputenc}
+\usepackage{graphicx}
+
+\usepackage[sort,compress]{cite}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{fancyvrb}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage[english,russian]{babel}
+\usepackage{tempora}
+\usepackage{minted}
+\usepackage{import}
+\graphicspath{ {./images/} }
+%\definecolor{codebg}{rgb}{0.9,0.9,0.9} %описание собственного цвета (почти
+%белый) \setminted{         % установка параметров по умолчанию для команд
+%бибилиотеки minted bgcolor=codebg, % установка цвета фона программного кода
+%linenos=true,   % включение номеров строк в листингах numbersep=5pt,  %
+%промежуток между номерами строк и началом строк листинга breaklines}     %
+%автоматические переносы строк (когда строки не умещаются)
+
+\usemintedstyle{bw} % включение черно-белого стиля программного кода
+	
+
+\usepackage[hidelinks]{hyperref}
+
+\setminted{
+	style=bw,
+	framesep=2mm, 
+	baselinestretch=1.2, 
+	fontsize=\footnotesize, 
+	linenos,
+	breaklines=true
+}
+
+\newcommand{\eqdef}{\stackrel {\rm def}{=}}
+
+\newtheorem{lem}{Лемма}
+
+\begin{document}
+
+% Кафедра (в родительном падеже)
+\chair{математической кибернетики и компьютерных наук}
+
+% Тема работы
+\title{Численное интегрирование, формула Симпсона, вычисление определенных и кратных интегралов}
+
+% Курс
+\course{3}
+
+% Группа
+\group{311}
+
+% Факультет (в родительном падеже) (по умолчанию "факультета КНиИТ")
+%\department{факультета КНиИТ}
+
+% Специальность/направление код - наименование
+\napravlenie{02.03.02 "--- Фундаментальная информатика и информационные технологии}
+
+% Для студентки. Для работы студента следующая команда не нужна.
+\studenttitle{Студента}
+
+% Фамилия, имя, отчество в родительном падеже
+\author{Аношкина Андрея Алексеевича}
+
+% Заведующий кафедрой
+\chtitle{к.\,ф.-м.\,н., доцент} % степень, звание
+\chname{С.\,В.\,Миронов}
+
+%Научный руководитель (для реферата преподаватель проверяющий работу)
+%!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+\satitle{Старший преподаватель} %должность, степень, звание
+\saname{М.\,С.\,Портенко}
+
+% Руководитель практики от организации (только для практики, для остальных типов
+% работ не используется)
+\patitle{к.\,ф.-м.\,н., доцент}
+\paname{Д.\,Ю.\,Петров}
+
+% Семестр (только для практики, для остальных типов работ не используется)
+\term{6}
+
+% Наименование практики (только для практики, для остальных типов работ не
+% используется)
+\practtype{учебная}
+
+% Продолжительность практики (количество недель) (только для практики, для
+% остальных типов работ не используется)
+\duration{2}
+
+% Даты начала и окончания практики (только для практики, для остальных типов
+% работ не используется)
+\practStart{01.07.2016} \practFinish{14.07.2016}
+
+% Год выполнения отчета
+\date{2024}
+
+\maketitle
+
+\tableofcontents
+
+\section{Work 12}
+
+\subsection*{Задание}
+
+Реализовать параллельно один из методов приближенного вычисления двойных
+интегралов, а именно метод статистических испытаний.
+
+\subsection*{Метод статистических испытаний} 
+ 
+Метод статистических испытаний основан на генерации случайных точек $x$, $y$, 
+принадлежащих области интегрирования функции. Алгоритм вычисляет значения 
+функции в каждой точке $(x, y)$ и суммирует их. С помощью отношения полученной 
+суммы к количеству всех точек можно определить величину двойного интеграла как 
+площадь области интегрирования умноженная на полученный коэффициент. 
+ 
+\begin{equation} 
+ J = \int_{a_1}^{b_1} \int_{a_2}^{b_2} f(x, y)\,dx \,dy \approx (b_1 - a_1)(b_2 - a_2) \cdot \frac{1}{N} \sum_{i = 0}^{N} f (x, y) 
+\end{equation}
+
+\subsection*{Реализация}
+
+Фрагмент кода решения приведен ниже:
+
+\begin{minted}{cpp}
+#include <iostream>
+#include "mpi.h"
+#include <time.h>
+#include <cmath>
+#define PI 3.1415926535897932384626433832795
+
+using namespace std;
+
+int NProc, ProcId;
+MPI_Status st;
+
+double f1(const double x, const double y, const double a1, const double b1, const double a2, const double b2) {
+	return (1 + exp(sin(PI * x) * cos(PI * y))) / (b1 - a1) / (b2 - a2);
+}
+
+void integral(const double a1, const double b1, const double a2, const double b2, const double h1, const double h2, double* res) {
+	double delta = (b2 - a2) * (b1 - a1);
+
+	double sum = 0;
+	int n = (int)((b1 - a1) / h1);
+
+	for (int i = ProcId; i < n; i += NProc) {
+		double x = a1 + (b1 - a1) * rand() / (RAND_MAX + 1.0);
+		double y = a2 + (b2 - a2) * rand() / (RAND_MAX + 1.0);
+		sum += f1(x, y, a1, b1, a2, b2);
+	}
+
+	if (ProcId != 0)
+		MPI_Send(&sum, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+	else {
+		for (int i = 1; i < NProc; ++i) {
+			double s;
+			MPI_Recv(&s, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &st);
+			sum += s;
+		}
+
+		*res = delta * sum / n;
+	}
+}
+
+double experiment(double* res, void f(const double a1, const double b1, const double a2, const double b2, const double h1, const double h2, double* res)) {
+	double stime = 0, ftime = 0;
+	double a1 = 0, b1 = 16;
+	double a2 = 0, b2 = 16;
+	double h1 = 0.000001, h2 = 0.000001;
+	stime = clock();
+	f(a1, b1, a2, b2, h1, h2, res);
+	ftime = clock();
+
+	return (ftime - stime) / CLOCKS_PER_SEC;
+}
+
+void calculate(void f(const double a1, const double b1, const double a2, const double b2, const double h1, const double h2, double* res)) {
+	double avg_time = 0;
+	double min_time = 0;
+	double max_time = 0;
+	double res = 0;
+	int numbExp = 10;
+
+	min_time = max_time = experiment(&res, f);
+	avg_time = min_time / numbExp;
+	for (int i = 0; i < numbExp - 1; ++i) {
+		double time = experiment(&res, f);
+		if (time > max_time)
+			max_time = time;
+		if (time < min_time)
+			min_time = time;
+
+		avg_time += time / numbExp;
+	}
+
+	if (ProcId == 0) {
+		cout << "Execution time: " << avg_time << "; " << min_time << "; " << max_time << "\n";
+		cout.precision(8);
+		cout << "Integral value: " << res << "\n";
+	}
+}
+
+int main() {
+
+	MPI_Init(NULL, NULL);
+	MPI_Comm_size(MPI_COMM_WORLD, &NProc);
+	MPI_Comm_rank(MPI_COMM_WORLD, &ProcId);
+	
+	calculate(integral);
+	cout << "\n";
+
+	MPI_Finalize();
+	return 0;
+}
+\end{minted}
+
+\subsection*{Результат работы}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth]{work-12.png}
+	\caption{Work"=12}
+\end{figure}
+
+\subsection*{Характеристики устройства}
+
+Процессор: Intel(R) Core(TM) i5-10400F
+
+Ядер: 6
+
+Оперативная память: 16 Гб
+
+\end{document}

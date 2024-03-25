@@ -1,0 +1,23 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kt}{void} \PYG{n+nf}{SerialFFT}\PYG{p}{(}\PYG{n}{complex}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{double}\PYG{o}{\PYGZgt{}*} \PYG{n}{inputSignal}\PYG{p}{,} \PYG{n}{complex}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{double}\PYG{o}{\PYGZgt{}*} \PYG{n}{outputSignal}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{size}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+	\PYG{n}{BitReversing}\PYG{p}{(}\PYG{n}{inputSignal}\PYG{p}{,} \PYG{n}{outputSignal}\PYG{p}{,} \PYG{n}{size}\PYG{p}{);}
+	\PYG{n}{SerialFFTCalculation}\PYG{p}{(}\PYG{n}{outputSignal}\PYG{p}{,} \PYG{n}{size}\PYG{p}{);}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{k+kt}{void} \PYG{n+nf}{ParallelFFTCalculation}\PYG{p}{(}\PYG{n}{complex}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{double}\PYG{o}{\PYGZgt{}*} \PYG{n}{signal}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{size}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+	\PYG{k+kt}{int} \PYG{n}{m} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+	\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{tmp\PYGZus{}size} \PYG{o}{=} \PYG{n}{size}\PYG{p}{;} \PYG{n}{tmp\PYGZus{}size} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{1}\PYG{p}{;} \PYG{n}{tmp\PYGZus{}size} \PYG{o}{/=} \PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{m}\PYG{o}{++}\PYG{p}{);}
+
+	\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{p} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{p} \PYG{o}{\PYGZlt{}} \PYG{n}{m}\PYG{p}{;} \PYG{o}{++}\PYG{n}{p}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+		\PYG{k+kt}{int} \PYG{n}{butterflyOffset} \PYG{o}{=} \PYG{l+m+mi}{1} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{p}{(}\PYG{n}{p} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{);}
+		\PYG{k+kt}{int} \PYG{n}{butterflySize} \PYG{o}{=} \PYG{n}{butterflyOffset} \PYG{o}{\PYGZgt{}\PYGZgt{}} \PYG{l+m+mi}{1}\PYG{p}{;}
+		\PYG{k+kt}{double} \PYG{n}{coeff} \PYG{o}{=} \PYG{n}{PI} \PYG{o}{/} \PYG{n}{butterflySize}\PYG{p}{;}
+
+		\PYG{c+cp}{\PYGZsh{}pragma omp parallel for schedule(static)}
+		\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZlt{}} \PYG{n}{size} \PYG{o}{/} \PYG{n}{butterflyOffset}\PYG{p}{;} \PYG{n}{i}\PYG{o}{++}\PYG{p}{)}
+			\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{j} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{j} \PYG{o}{\PYGZlt{}} \PYG{n}{butterflySize}\PYG{p}{;} \PYG{n}{j}\PYG{o}{++}\PYG{p}{)}
+				\PYG{n}{Butterfly}\PYG{p}{(}\PYG{n}{signal}\PYG{p}{,} \PYG{n}{complex}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{double}\PYG{o}{\PYGZgt{}}\PYG{p}{(}\PYG{n}{cos}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{n}{j} \PYG{o}{*} \PYG{n}{coeff}\PYG{p}{),}
+					\PYG{n}{sin}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{n}{j} \PYG{o}{*} \PYG{n}{coeff}\PYG{p}{)),} \PYG{n}{j} \PYG{o}{+} \PYG{n}{i} \PYG{o}{*} \PYG{n}{butterflyOffset}\PYG{p}{,} \PYG{n}{butterflySize}\PYG{p}{);}
+	\PYG{p}{\PYGZcb{}}
+\PYG{p}{\PYGZcb{}}
+\end{Verbatim}

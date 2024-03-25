@@ -1,0 +1,5 @@
+﻿main.obj : error LNK2019: ссылка на неразрешенный внешний символ _MPI_Comm_size@8 в функции _main.
+main.obj : error LNK2019: ссылка на неразрешенный внешний символ _MPI_Comm_rank@8 в функции _main.
+main.obj : error LNK2019: ссылка на неразрешенный внешний символ _MPI_Init@8 в функции _main.
+main.obj : error LNK2019: ссылка на неразрешенный внешний символ _MPI_Finalize@0 в функции _main.
+C:\Users\PC\Desktop\University\ParallelProgramming\MPI_Simpliest_c_Bind\Debug\MPI_Simpliest_c_Bind.exe : fatal error LNK1120: неразрешенных внешних элементов: 4

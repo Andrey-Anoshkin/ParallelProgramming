@@ -1,0 +1,176 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZlt{}stdio.h\PYGZgt{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZlt{}stdlib.h\PYGZgt{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZlt{}conio.h\PYGZgt{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZlt{}time.h\PYGZgt{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZlt{}math.h\PYGZgt{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZlt{}algorithm\PYGZgt{}}
+
+\PYG{c+c1}{// Function for simple initialization of the matrix}
+\PYG{c+c1}{// and the vector elements}
+\PYG{k+kt}{void} \PYG{n+nf}{DummyDataInitialization}\PYG{p}{(}\PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pMatrix}\PYG{p}{,} \PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pVector}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{Size}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+	\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZlt{}} \PYG{n}{Size}\PYG{p}{;} \PYG{o}{++}\PYG{n}{i}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+		\PYG{n}{pVector}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{=} \PYG{n}{i} \PYG{o}{+} \PYG{l+m+mf}{1.0}\PYG{p}{;}
+		\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{j} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{j} \PYG{o}{\PYGZlt{}} \PYG{n}{Size}\PYG{p}{;} \PYG{o}{++}\PYG{n}{j}\PYG{p}{)}
+			\PYG{k}{if} \PYG{p}{(}\PYG{n}{j} \PYG{o}{\PYGZlt{}=} \PYG{n}{i}\PYG{p}{)}
+				\PYG{n}{pMatrix}\PYG{p}{[}\PYG{n}{i} \PYG{o}{*} \PYG{n}{Size} \PYG{o}{+} \PYG{n}{j}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{p}{;}
+			\PYG{k}{else}
+				\PYG{n}{pMatrix}\PYG{p}{[}\PYG{n}{i} \PYG{o}{*} \PYG{n}{Size} \PYG{o}{+} \PYG{n}{j}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+	\PYG{p}{\PYGZcb{}}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{c+c1}{// Function for random initialization of the matrix}
+\PYG{c+c1}{// and the vector elements}
+\PYG{k+kt}{void} \PYG{n+nf}{RandomDataInitialization}\PYG{p}{(}\PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pMatrix}\PYG{p}{,} \PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pVector}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{Size}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+	\PYG{n}{srand}\PYG{p}{(}\PYG{k+kt}{unsigned}\PYG{p}{(}\PYG{n}{clock}\PYG{p}{()));}
+	\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZlt{}} \PYG{n}{Size}\PYG{p}{;} \PYG{o}{++}\PYG{n}{i}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+		\PYG{n}{pVector}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{=} \PYG{n}{rand}\PYG{p}{()} \PYG{o}{/} \PYG{k+kt}{double}\PYG{p}{(}\PYG{l+m+mi}{1000}\PYG{p}{);}
+		\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{j} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{j} \PYG{o}{\PYGZlt{}} \PYG{n}{Size}\PYG{p}{;} \PYG{o}{++}\PYG{n}{j}\PYG{p}{)}
+			\PYG{k}{if} \PYG{p}{(}\PYG{n}{j} \PYG{o}{\PYGZlt{}=} \PYG{n}{i}\PYG{p}{)}
+				\PYG{n}{pMatrix}\PYG{p}{[}\PYG{n}{i} \PYG{o}{*} \PYG{n}{Size} \PYG{o}{+} \PYG{n}{j}\PYG{p}{]} \PYG{o}{=} \PYG{n}{rand}\PYG{p}{()} \PYG{o}{/} \PYG{k+kt}{double}\PYG{p}{(}\PYG{l+m+mi}{1000}\PYG{p}{);}
+			\PYG{k}{else}
+				\PYG{n}{pMatrix}\PYG{p}{[}\PYG{n}{i} \PYG{o}{*} \PYG{n}{Size} \PYG{o}{+} \PYG{n}{j}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+	\PYG{p}{\PYGZcb{}}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{c+c1}{// Function for memory allocation and definition of the objectselements}
+\PYG{k+kt}{void} \PYG{n+nf}{ProcessInitialization}\PYG{p}{(}\PYG{k+kt}{double}\PYG{o}{*\PYGZam{}} \PYG{n}{pMatrix}\PYG{p}{,} \PYG{k+kt}{double}\PYG{o}{*\PYGZam{}} \PYG{n}{pVector}\PYG{p}{,} \PYG{k+kt}{double}\PYG{o}{*\PYGZam{}} \PYG{n}{pResult}\PYG{p}{,} \PYG{k+kt}{int}\PYG{o}{\PYGZam{}} \PYG{n}{Size}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+	\PYG{c+c1}{// Setting the size of the matrix and the vector}
+	\PYG{k}{do} \PYG{p}{\PYGZob{}}
+		\PYG{n}{printf}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{Enter size of the matrix and the vector: \PYGZdq{}}\PYG{p}{);}
+		\PYG{n}{scanf\PYGZus{}s}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}\PYGZpc{}d\PYGZdq{}}\PYG{p}{,} \PYG{o}{\PYGZam{}}\PYG{n}{Size}\PYG{p}{);}
+		\PYG{n}{printf}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{Chosen size = \PYGZpc{}d }\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{Size}\PYG{p}{);}
+		\PYG{k}{if} \PYG{p}{(}\PYG{n}{Size} \PYG{o}{\PYGZlt{}=} \PYG{l+m+mi}{0}\PYG{p}{)}
+			\PYG{n}{printf}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{Size of objects must be greater than 0!}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{);}
+	\PYG{p}{\PYGZcb{}} \PYG{k}{while} \PYG{p}{(}\PYG{n}{Size} \PYG{o}{\PYGZlt{}=} \PYG{l+m+mi}{0}\PYG{p}{);}
+
+
+	\PYG{c+c1}{// Memory allocation}
+	\PYG{n}{pMatrix} \PYG{o}{=} \PYG{k}{new} \PYG{k+kt}{double}\PYG{p}{[}\PYG{n}{Size} \PYG{o}{*} \PYG{n}{Size}\PYG{p}{];}
+	\PYG{n}{pVector} \PYG{o}{=} \PYG{k}{new} \PYG{k+kt}{double}\PYG{p}{[}\PYG{n}{Size}\PYG{p}{];}
+	\PYG{n}{pResult} \PYG{o}{=} \PYG{k}{new} \PYG{k+kt}{double}\PYG{p}{[}\PYG{n}{Size}\PYG{p}{];}
+
+	\PYG{c+c1}{// Initialization of the matrix and the vector elements}
+	\PYG{n}{DummyDataInitialization}\PYG{p}{(}\PYG{n}{pMatrix}\PYG{p}{,} \PYG{n}{pVector}\PYG{p}{,} \PYG{n}{Size}\PYG{p}{);}
+	\PYG{c+c1}{//RandomDataInitialization(pMatrix, pVector, Size);}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{c+c1}{// Function for formatted matrix output}
+\PYG{k+kt}{void} \PYG{n+nf}{PrintMatrix}\PYG{p}{(}\PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pMatrix}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{RowCount}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{ColCount}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+	\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZlt{}} \PYG{n}{RowCount}\PYG{p}{;} \PYG{o}{++}\PYG{n}{i}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+		\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{j} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{j} \PYG{o}{\PYGZlt{}} \PYG{n}{ColCount}\PYG{p}{;} \PYG{o}{++}\PYG{n}{j}\PYG{p}{)}
+			\PYG{n}{printf}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}\PYGZpc{}7.4f \PYGZdq{}}\PYG{p}{,} \PYG{n}{pMatrix}\PYG{p}{[}\PYG{n}{i} \PYG{o}{*} \PYG{n}{RowCount} \PYG{o}{+} \PYG{n}{j}\PYG{p}{]);}
+		\PYG{n}{printf}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{);}
+	\PYG{p}{\PYGZcb{}}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{c+c1}{// Function for formatted vector output}
+\PYG{k+kt}{void} \PYG{n+nf}{PrintVector}\PYG{p}{(}\PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pVector}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{Size}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+	\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZlt{}} \PYG{n}{Size}\PYG{p}{;} \PYG{o}{++}\PYG{n}{i}\PYG{p}{)}
+		\PYG{n}{printf}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}\PYGZpc{}7.4f \PYGZdq{}}\PYG{p}{,} \PYG{n}{pVector}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]);}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{c+c1}{// Function for the execution of Gauss algorithm}
+\PYG{k+kt}{void} \PYG{n+nf}{ResultCalculation}\PYG{p}{(}\PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pMatrix}\PYG{p}{,} \PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pVector}\PYG{p}{,} \PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pResult}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{Size}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+
+	\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZlt{}} \PYG{n}{Size}\PYG{p}{;} \PYG{n}{pResult}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{=} \PYG{n}{pVector}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{/} \PYG{n}{pMatrix}\PYG{p}{[}\PYG{n}{i} \PYG{o}{*} \PYG{n}{Size} \PYG{o}{+} \PYG{n}{i}\PYG{p}{],} \PYG{o}{++}\PYG{n}{i}\PYG{p}{);}
+	\PYG{k+kt}{double} \PYG{n}{maxDif} \PYG{o}{=} \PYG{l+m+mf}{1e+6}\PYG{p}{;}
+	\PYG{k+kt}{double} \PYG{n}{w} \PYG{o}{=} \PYG{l+m+mf}{1.5}\PYG{p}{;}
+	
+	\PYG{k}{for} \PYG{p}{(;} \PYG{n}{maxDif} \PYG{o}{\PYGZgt{}} \PYG{l+m+mf}{1e\PYGZhy{}9}\PYG{p}{;)} \PYG{p}{\PYGZob{}}
+		\PYG{n}{maxDif} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+		\PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pNew} \PYG{o}{=} \PYG{k}{new} \PYG{k+kt}{double}\PYG{p}{[}\PYG{n}{Size}\PYG{p}{];}
+		\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZlt{}} \PYG{n}{Size}\PYG{p}{;} \PYG{o}{++}\PYG{n}{i}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+			\PYG{k+kt}{double} \PYG{n}{sum} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+			\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{j} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{j} \PYG{o}{\PYGZlt{}} \PYG{n}{Size}\PYG{p}{;} \PYG{o}{++}\PYG{n}{j}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+				\PYG{k}{if} \PYG{p}{(}\PYG{n}{j} \PYG{o}{\PYGZlt{}} \PYG{n}{i}\PYG{p}{)}
+					\PYG{n}{sum} \PYG{o}{+=} \PYG{n}{pMatrix}\PYG{p}{[}\PYG{n}{i} \PYG{o}{*} \PYG{n}{Size} \PYG{o}{+} \PYG{n}{j}\PYG{p}{]} \PYG{o}{*} \PYG{n}{pNew}\PYG{p}{[}\PYG{n}{j}\PYG{p}{];}
+				\PYG{k}{else}
+					\PYG{k}{if} \PYG{p}{(}\PYG{n}{j} \PYG{o}{\PYGZgt{}} \PYG{n}{i}\PYG{p}{)}
+						\PYG{n}{sum} \PYG{o}{+=} \PYG{n}{pMatrix}\PYG{p}{[}\PYG{n}{i} \PYG{o}{*} \PYG{n}{Size} \PYG{o}{+} \PYG{n}{j}\PYG{p}{]} \PYG{o}{*} \PYG{n}{pResult}\PYG{p}{[}\PYG{n}{j}\PYG{p}{];}
+			\PYG{p}{\PYGZcb{}}
+			\PYG{n}{pNew}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{=} \PYG{p}{(}\PYG{l+m+mi}{1} \PYG{o}{\PYGZhy{}} \PYG{n}{w}\PYG{p}{)} \PYG{o}{*} \PYG{n}{pResult}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{+} \PYG{n}{w} \PYG{o}{*} \PYG{p}{(}\PYG{n}{pVector}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{\PYGZhy{}} \PYG{n}{sum}\PYG{p}{)} \PYG{o}{/} \PYG{n}{pMatrix}\PYG{p}{[}\PYG{n}{i} \PYG{o}{*} \PYG{n}{Size} \PYG{o}{+} \PYG{n}{i}\PYG{p}{];}
+		\PYG{p}{\PYGZcb{}}
+
+		\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZlt{}} \PYG{n}{Size}\PYG{p}{;} \PYG{o}{++}\PYG{n}{i}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+			\PYG{n}{maxDif} \PYG{o}{=} \PYG{n}{std}\PYG{o}{::}\PYG{n}{max}\PYG{p}{(}\PYG{n}{maxDif}\PYG{p}{,} \PYG{n}{fabs}\PYG{p}{(}\PYG{n}{pNew}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{\PYGZhy{}} \PYG{n}{pResult}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]));}
+			\PYG{n}{pResult}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{=} \PYG{n}{pNew}\PYG{p}{[}\PYG{n}{i}\PYG{p}{];}
+		\PYG{p}{\PYGZcb{}}
+
+		\PYG{k}{delete}\PYG{p}{[]} \PYG{n}{pNew}\PYG{p}{;}
+	\PYG{p}{\PYGZcb{}}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{c+c1}{// Function for computational process termination}
+\PYG{k+kt}{void} \PYG{n+nf}{ProcessTermination}\PYG{p}{(}\PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pMatrix}\PYG{p}{,} \PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pVector}\PYG{p}{,} \PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pResult}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+	\PYG{k}{delete}\PYG{p}{[]} \PYG{n}{pMatrix}\PYG{p}{;}
+	\PYG{k}{delete}\PYG{p}{[]} \PYG{n}{pVector}\PYG{p}{;}
+	\PYG{k}{delete}\PYG{p}{[]} \PYG{n}{pResult}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{c+c1}{// Function for testing the result}
+\PYG{k+kt}{void} \PYG{n+nf}{TestResult}\PYG{p}{(}\PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pMatrix}\PYG{p}{,} \PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pVector}\PYG{p}{,} \PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pResult}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{Size}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+	\PYG{c+cm}{/* Buffer for storing the vector, that is a result of multiplication}
+\PYG{c+cm}{	of the linear system matrix by the vector of unknowns */}
+	\PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pRightPartVector}\PYG{p}{;}
+
+	\PYG{c+c1}{// Flag, that shows wheather the right parts vectors are identical or not}
+	\PYG{k+kt}{int} \PYG{n}{equal} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+	\PYG{k+kt}{double} \PYG{n}{Accuracy} \PYG{o}{=} \PYG{l+m+mf}{1e\PYGZhy{}3}\PYG{p}{;} \PYG{c+c1}{// Comparison accuracy}
+	\PYG{n}{pRightPartVector} \PYG{o}{=} \PYG{k}{new} \PYG{k+kt}{double}\PYG{p}{[}\PYG{n}{Size}\PYG{p}{];}
+	\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZlt{}} \PYG{n}{Size}\PYG{p}{;} \PYG{o}{++}\PYG{n}{i}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+		\PYG{n}{pRightPartVector}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+		\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{j} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{j} \PYG{o}{\PYGZlt{}} \PYG{n}{Size}\PYG{p}{;} \PYG{o}{++}\PYG{n}{j}\PYG{p}{)}
+			\PYG{n}{pRightPartVector}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{+=} \PYG{n}{pMatrix}\PYG{p}{[}\PYG{n}{i} \PYG{o}{*} \PYG{n}{Size} \PYG{o}{+} \PYG{n}{j}\PYG{p}{]} \PYG{o}{*} \PYG{n}{pResult}\PYG{p}{[}\PYG{n}{j}\PYG{p}{];}
+	\PYG{p}{\PYGZcb{}}
+
+	\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZlt{}} \PYG{n}{Size}\PYG{p}{;} \PYG{n}{i}\PYG{o}{++}\PYG{p}{)}
+		\PYG{k}{if} \PYG{p}{(}\PYG{n}{fabs}\PYG{p}{(}\PYG{n}{pRightPartVector}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{\PYGZhy{}} \PYG{n}{pVector}\PYG{p}{[}\PYG{n}{i}\PYG{p}{])} \PYG{o}{\PYGZgt{}} \PYG{n}{Accuracy}\PYG{p}{)}
+			\PYG{n}{equal} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{p}{;}
+
+	\PYG{k}{if} \PYG{p}{(}\PYG{n}{equal} \PYG{o}{==} \PYG{l+m+mi}{1}\PYG{p}{)}
+		\PYG{n}{printf}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{The result of the parallel Gauss algorithm is NOT correct. Check your code.\PYGZdq{}}\PYG{p}{);}
+	\PYG{k}{else}
+		\PYG{n}{printf}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{The result of the parallel Gauss algorithm is correct.\PYGZdq{}}\PYG{p}{);}
+
+	\PYG{k}{delete}\PYG{p}{[]} \PYG{n}{pRightPartVector}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+\PYG{k+kt}{int} \PYG{n+nf}{main}\PYG{p}{()} \PYG{p}{\PYGZob{}}
+	\PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pMatrix}\PYG{p}{;} \PYG{c+c1}{// The matrix of the linear system}
+	\PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pVector}\PYG{p}{;} \PYG{c+c1}{// The right parts of the linear system}
+	\PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pResult}\PYG{p}{;} \PYG{c+c1}{// The result vector}
+	\PYG{k+kt}{int} \PYG{n}{Size}\PYG{p}{;} \PYG{c+c1}{// The sizes of the initial matrix and the vector}
+	\PYG{k+kt}{double} \PYG{n}{start}\PYG{p}{,} \PYG{n}{finish}\PYG{p}{,} \PYG{n}{duration}\PYG{p}{;}
+	\PYG{n}{printf}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Upper relaxation algorithm for solving linear systems}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{);}
+
+	\PYG{c+c1}{// Memory allocation and definition of objects\PYGZsq{} elements}
+	\PYG{n}{ProcessInitialization}\PYG{p}{(}\PYG{n}{pMatrix}\PYG{p}{,} \PYG{n}{pVector}\PYG{p}{,} \PYG{n}{pResult}\PYG{p}{,} \PYG{n}{Size}\PYG{p}{);}
+
+	\PYG{c+c1}{// The matrix and the vector output}
+	\PYG{c+cm}{/*printf(\PYGZdq{}Initial Matrix \PYGZbs{}n\PYGZdq{});}
+\PYG{c+cm}{	PrintMatrix(pMatrix, Size, Size);}
+\PYG{c+cm}{	printf(\PYGZdq{}Initial Vector \PYGZbs{}n\PYGZdq{});}
+\PYG{c+cm}{	PrintVector(pVector, Size);*/}
+
+	\PYG{c+c1}{// Execution of Gauss algorithm}
+	\PYG{n}{start} \PYG{o}{=} \PYG{n}{clock}\PYG{p}{();}
+	\PYG{n}{ResultCalculation}\PYG{p}{(}\PYG{n}{pMatrix}\PYG{p}{,} \PYG{n}{pVector}\PYG{p}{,} \PYG{n}{pResult}\PYG{p}{,} \PYG{n}{Size}\PYG{p}{);}
+	\PYG{n}{finish} \PYG{o}{=} \PYG{n}{clock}\PYG{p}{();}
+	\PYG{n}{duration} \PYG{o}{=} \PYG{p}{(}\PYG{n}{finish} \PYG{o}{\PYGZhy{}} \PYG{n}{start}\PYG{p}{)} \PYG{o}{/} \PYG{n}{CLOCKS\PYGZus{}PER\PYGZus{}SEC}\PYG{p}{;}
+
+	\PYG{c+c1}{// Testing the result}
+	\PYG{n}{TestResult}\PYG{p}{(}\PYG{n}{pMatrix}\PYG{p}{,} \PYG{n}{pVector}\PYG{p}{,} \PYG{n}{pResult}\PYG{p}{,} \PYG{n}{Size}\PYG{p}{);}
+
+	\PYG{c+c1}{// Printing the result vector}
+	\PYG{c+cm}{/*printf(\PYGZdq{}\PYGZbs{}nResult Vector: \PYGZbs{}n\PYGZdq{});}
+\PYG{c+cm}{	PrintVector(pResult, Size);*/}
+
+	\PYG{c+c1}{// Printing the execution time of Gauss method}
+	\PYG{n}{printf}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{Time of execution: \PYGZpc{}f}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{duration}\PYG{p}{);}
+
+	\PYG{c+c1}{// Computational process termination}
+	\PYG{n}{ProcessTermination}\PYG{p}{(}\PYG{n}{pMatrix}\PYG{p}{,} \PYG{n}{pVector}\PYG{p}{,} \PYG{n}{pResult}\PYG{p}{);}
+
+	\PYG{k}{return} \PYG{l+m+mi}{0}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+\end{Verbatim}

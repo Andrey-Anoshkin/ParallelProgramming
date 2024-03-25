@@ -1,0 +1,3 @@
+﻿  main.cpp
+C:\Users\PC\Desktop\University\ParallelProgramming\Gauss\Gauss\main.cpp(88,19): warning C4244: =: преобразование "double" в "int", возможна потеря данных
+  Gauss.vcxproj -> C:\Users\PC\Desktop\University\ParallelProgramming\Gauss\Debug\SeqGauss.exe

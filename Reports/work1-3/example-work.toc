@@ -1,5 +1,0 @@
-\babel@toc {russian}{}
-\contentsline {section}{\numberline {1}Work 01}{3}{section.1}%
-\contentsline {section}{\numberline {2}Work 02}{8}{section.2}%
-\contentsline {section}{\numberline {3}Work 03}{11}{section.3}%
-\contentsfinish 
