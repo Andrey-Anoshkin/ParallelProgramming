@@ -1,0 +1,3 @@
+﻿  main.cpp
+C:\Users\PC\Desktop\University\ParallelProgramming\MPI_Gauss\MPI_Gauss\main.cpp(108,19): warning C4244: =: преобразование "double" в "int", возможна потеря данных
+  MPI_Gauss.vcxproj -> C:\Users\PC\Desktop\University\ParallelProgramming\MPI_Gauss\x64\Debug\MPI_Gauss.exe

@@ -13,15 +13,6 @@ double f1(const double x, const double y, const double a1, const double b1, cons
 	return (1 + exp(sin(PI * x) * cos(PI * y))) / (b1 - a1) / (b2 - a2);
 }
 
-double q(int i, int j, int n, int m) {
-	double q = 1;
-	if (i == 0 || i == n)
-		q *= 0.5;
-	if (j == 0 || j == m)
-		q *= 0.5;
-	return q;
-}
-
 void integral(const double a1, const double b1, const double a2, const double b2, const double h1, const double h2, double* res) {
 	double delta = (b2 - a2) * (b1 - a1);
 
