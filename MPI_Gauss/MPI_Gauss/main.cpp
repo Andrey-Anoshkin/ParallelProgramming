@@ -5,11 +5,26 @@
 #include <time.h>
 #include <math.h>
 #include "mpi.h"
+#include <iostream>
 
-int* pPivotPos; // The Number of pivot rows selected at the iterations
-int* pPivotIter; // The Iterations, at which the rows were pivots
 int NProc, ProcId;
 MPI_Status st;
+
+// Function for formatted matrix output
+void PrintMatrix(double* pMatrix, int RowCount, int ColCount) {
+	for (int i = 0; i < RowCount; ++i) {
+		for (int j = 0; j < ColCount; ++j)
+			printf("%7.4f ", pMatrix[i * RowCount + j]);
+		printf("\n");
+	}
+}
+
+// Function for formatted vector output
+void PrintVector(double* pVector, int Size) {
+	for (int i = 0; i < Size; ++i)
+		printf("%7.4f ", pVector[i]);
+}
+
 
 // Function for simple initialization of the matrix
 // and the vector elements
@@ -31,10 +46,7 @@ void RandomDataInitialization(double* pMatrix, double* pVector, int Size) {
 	for (int i = 0; i < Size; ++i) {
 		pVector[i] = rand() / double(1000);
 		for (int j = 0; j < Size; ++j)
-			if (j <= i)
-				pMatrix[i * Size + j] = rand() / double(1000);
-			else
-				pMatrix[i * Size + j] = 0;
+			pMatrix[i * Size + j] = rand() / double(1000);
 	}
 }
 
@@ -47,72 +59,76 @@ void MyDataInitialization(double* pMatrix, double* pVector, int Size) {
 }
 
 // Function for memory allocation and definition of the objectselements 
-void ProcessInitialization(double*& pMatrix, double*& pVector, double*& pResult, int& Size) {
+void ProcessInitialization(double*& pMatrix, double*& pVector, double*& pResult, 
+	double*& pPartialMatrix, double*& pPartialVector, int& Size, int& PartialSize, 
+	int& AdditionalSize, double*& pAdditionalMatrix, double*& pAdditionalVector) {
 	MPI_Barrier(MPI_COMM_WORLD);
-	// Setting the size of the matrix and the vector
-	/*do {
-		printf("\nEnter size of the matrix and the vector: ");
-		scanf_s("%d", &Size);
-		printf("\nChosen size = %d \n", Size);
-		if (Size <= 0)
-			printf("\nSize of objects must be greater than 0!\n");
-	} while (Size <= 0);*/
 
-	Size = 1000; // Only for my data
+	Size = 3000;
 
 	// Memory allocation
 	pMatrix = new double[Size * Size];
 	pVector = new double[Size];
 	pResult = new double[Size];
 
+	PartialSize = Size / NProc;
+
+	// Partial arrays memory allocation
+	pPartialMatrix = new double[Size * PartialSize];
+	pPartialVector = new double[PartialSize];
+
+	AdditionalSize = ((ProcId > 0) && (ProcId <= (Size % NProc)) && ((Size % NProc) > 0));
+
+	// Additional arrays memory allocation
+	pAdditionalMatrix = new double[Size * AdditionalSize];
+	pAdditionalVector = new double[AdditionalSize];
+
 	if (ProcId == 0) {
 		// Initialization of the matrix and the vector elements
-		DummyDataInitialization(pMatrix, pVector, Size);
-		//RandomDataInitialization(pMatrix, pVector, Size);
+		//DummyDataInitialization(pMatrix, pVector, Size);
+		RandomDataInitialization(pMatrix, pVector, Size);
 		//MyDataInitialization(pMatrix, pVector, Size);
-		for (int i = 1; i < NProc; ++i) {
-			MPI_Send(pMatrix, Size * Size, MPI_DOUBLE, i, 0, MPI_COMM_WORLD);
-			MPI_Send(pVector, Size, MPI_DOUBLE, i, 0, MPI_COMM_WORLD);
+	}
+	
+	MPI_Scatter(pMatrix, Size * PartialSize, MPI_DOUBLE, pPartialMatrix, Size * PartialSize, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Scatter(pVector, PartialSize, MPI_DOUBLE, pPartialVector, PartialSize, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+	if (Size % NProc) {
+		if (ProcId == 0)
+			for (int i = 0; i < Size % NProc; ++i) {
+				MPI_Send(pMatrix + Size * (PartialSize * NProc + i), Size, MPI_DOUBLE, i + 1, 0, MPI_COMM_WORLD);
+				MPI_Send(pVector + (PartialSize * NProc + i), 1, MPI_DOUBLE, i + 1, 0, MPI_COMM_WORLD);
+			}
+		else if (AdditionalSize) {
+			MPI_Recv(pAdditionalMatrix, Size, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, &st);
+			MPI_Recv(pAdditionalVector, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, &st);
 		}
 	}
-	else {
-		MPI_Recv(pMatrix, Size * Size, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, &st);
-		MPI_Recv(pVector, Size, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, &st);
-	}
-}
-
-// Function for formatted matrix output
-void PrintMatrix(double* pMatrix, int RowCount, int ColCount) {
-	for (int i = 0; i < RowCount; ++i) {
-		for (int j = 0; j < ColCount; ++j)
-			printf("%7.4f ", pMatrix[i * RowCount + j]);
-		printf("\n");
-	}
-}
-
-// Function for formatted vector output
-void PrintVector(double* pVector, int Size) {
-	for (int i = 0; i < Size; ++i)
-		printf("%7.4f ", pVector[i]);
 }
 
 // Finding the pivot row
-int ParallelFindPivotRow(double* pMatrix, int Size, int Iter) {
+int ParallelFindPivotRow(double* pPartialMatrix, int PartialSize, double* pAdditionalMatrix, int AdditionalSize, int Iter, int* pPivotIter, int Size) {
 	MPI_Barrier(MPI_COMM_WORLD);
 	int PivotRow = -1; // The index of the pivot row
 	int MaxValue = 0; // The value of the pivot element
 
-	for (int i = ProcId; i < Size; i += NProc) {
-		if ((pPivotIter[i] == -1) && (fabs(pMatrix[i * Size + Iter]) > MaxValue)) {
-			PivotRow = i;
-			MaxValue = fabs(pMatrix[i * Size + Iter]);
+	for (int i = 0; i < PartialSize; ++i) {
+		if ((pPivotIter[i + PartialSize * ProcId] == -1) && (fabs(pPartialMatrix[i * Size + Iter]) >= MaxValue)) {
+			PivotRow = i + PartialSize * ProcId;
+			MaxValue = fabs(pPartialMatrix[i * Size + Iter]);
+		}
+	}
+
+	if (AdditionalSize) {
+		if (pPivotIter[PartialSize * NProc + ProcId - 1] == -1 && fabs(pAdditionalMatrix[Iter]) >= MaxValue) {
+			PivotRow = PartialSize * NProc + ProcId - 1;
+			MaxValue = fabs(pAdditionalMatrix[Iter]);
 		}
 	}
 
 	if (ProcId != 0) {
 		MPI_Send(&MaxValue, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
 		MPI_Send(&PivotRow, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-		MPI_Recv(&PivotRow, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &st);
 	}
 	else {
 		for (int i = 1; i < NProc; ++i) {
@@ -124,73 +140,110 @@ int ParallelFindPivotRow(double* pMatrix, int Size, int Iter) {
 				PivotRow = TPivotRow;
 			}
 		}
-		for (int i = 1; i < NProc; ++i)
-			MPI_Send(&PivotRow, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
 	}
+
+	MPI_Bcast(&PivotRow, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
 	return PivotRow;
 }
 
 // Column elimination
-void ParallelColumnElimination(double* pMatrix, double* pVector, int Pivot, int Iter, int Size) {
+void ParallelColumnElimination(double* pPartialMatrix, double* pPartialVector, double* pAdditionalMatrix, double* pAdditionalVector, int Pivot, int Iter, int Size, int PartialSize, int AdditionalSize, int* pPivotIter) {
 	MPI_Barrier(MPI_COMM_WORLD);
 	double PivotValue, PivotFactor;
-	PivotValue = pMatrix[Pivot * Size + Iter];
+	double* PivotRow = new double[Size - Iter];
 
-	for (int i = 0; i < Size; ++i) {
-		if (pPivotIter[i] == -1) {
-			PivotFactor = pMatrix[i * Size + Iter] / PivotValue;
+	if (Pivot <= NProc * PartialSize - 1) {
+		if (Pivot >= ProcId * PartialSize && Pivot < (ProcId + 1) * PartialSize) {
+			PivotValue = pPartialVector[(Pivot - ProcId * PartialSize)];
+			for (int i = 0; i < Size - Iter; ++i)
+				PivotRow[i] = pPartialMatrix[(Pivot - ProcId * PartialSize) * Size + Iter + i];
+			for (int i = 0; i < NProc; ++i)
+				if (i != ProcId) {
+					MPI_Send(PivotRow, Size - Iter, MPI_DOUBLE, i, 0, MPI_COMM_WORLD);
+					MPI_Send(&PivotValue, 1, MPI_DOUBLE, i, 1, MPI_COMM_WORLD);
+				}
+		}
+		else {
+			MPI_Recv(PivotRow, Size - Iter, MPI_DOUBLE, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &st);
+			MPI_Recv(&PivotValue, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 1, MPI_COMM_WORLD, &st);
+		}
+	}
+	else
+		if (Pivot == NProc * PartialSize + ProcId - 1) {
+			PivotValue = pAdditionalVector[0];
+			for (int i = 0; i < Size - Iter; ++i)
+				PivotRow[i] = pAdditionalMatrix[Iter + i];
+			for (int i = 0; i < NProc; ++i)
+				if (i != ProcId) {
+					MPI_Send(PivotRow, Size - Iter, MPI_DOUBLE, i, 0, MPI_COMM_WORLD);
+					MPI_Send(&PivotValue, 1, MPI_DOUBLE, i, 1, MPI_COMM_WORLD);
+				}
+		}
+		else {
+			MPI_Recv(PivotRow, Size - Iter, MPI_DOUBLE, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &st);
+			MPI_Recv(&PivotValue, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 1, MPI_COMM_WORLD, &st);
+		}
+
+	for (int i = 0; i < PartialSize; ++i) {
+		if (pPivotIter[i + PartialSize * ProcId] == -1) {
+			PivotFactor = pPartialMatrix[i * Size + Iter] / PivotRow[0];
 			for (int j = Iter; j < Size; ++j)
-				pMatrix[i * Size + j] -= PivotFactor * pMatrix[Pivot * Size + j];
-			pVector[i] -= PivotFactor * pVector[Pivot];
+				pPartialMatrix[i * Size + j] -= PivotFactor * PivotRow[j - Iter];
+			pPartialVector[i] -= PivotFactor * PivotValue;
 		}
 	}
 
-	if (ProcId != 0) {
-		MPI_Recv(pMatrix, Size * Size, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, &st);
-		MPI_Recv(pVector, Size, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, &st);
-	}
-	else {
-		for (int i = 1; i < NProc; ++i) {
-			MPI_Send(pMatrix, Size * Size, MPI_DOUBLE, i, 0, MPI_COMM_WORLD);
-			MPI_Send(pVector, Size, MPI_DOUBLE, i, 0, MPI_COMM_WORLD);
+	if (AdditionalSize) {
+		if (pPivotIter[NProc * PartialSize + ProcId - 1] == -1) {
+			PivotFactor = pAdditionalMatrix[Iter] / PivotRow[0];
+			for (int j = Iter; j < Size; ++j)
+				pAdditionalMatrix[j] -= PivotFactor * PivotRow[j - Iter];
+			pAdditionalVector[0] -= PivotFactor * PivotValue;
 		}
 	}
 }
 
 // Gaussian elimination
-void ParallelGaussianElimination(double* pMatrix, double* pVector, int Size) {
-	MPI_Barrier(MPI_COMM_WORLD);
+void ParallelGaussianElimination(double* pPartialMatrix, double* pPartialVector, int PartialSize,
+	double* pAdditionalMatrix, double* pAdditionalVector, int AdditionalSize, int Size, int* pPivotPos, int* pPivotIter) {
+	//MPI_Barrier(MPI_COMM_WORLD);
 	int PivotRow; // The number of the current pivot row
 	for (int Iter = 0; Iter < Size; ++Iter) {
 		// Finding the pivot row
-		PivotRow = ParallelFindPivotRow(pMatrix, Size, Iter);
+		PivotRow = ParallelFindPivotRow(pPartialMatrix, PartialSize, pAdditionalMatrix, AdditionalSize, Iter, pPivotIter, Size);
 		pPivotPos[Iter] = PivotRow;
 		pPivotIter[PivotRow] = Iter;
-		ParallelColumnElimination(pMatrix, pVector, PivotRow, Iter, Size);
+
+		/*if (ProcId == 0) {
+			for (int i = 0; i < Size; ++i)
+				std::cout << pPivotPos[i] << " ";
+			std::cout << "\n";
+		}*/
+
+		ParallelColumnElimination(pPartialMatrix, pPartialVector, pAdditionalMatrix, pAdditionalVector, PivotRow, Iter, Size, PartialSize, AdditionalSize, pPivotIter);
 	}
 }
 
 // Back substution
-void ParallelBackSubstitution(double* pMatrix, double* pVector, double* pResult, int Size) {
-	MPI_Barrier(MPI_COMM_WORLD);
+void ParallelBackSubstitution(double* pMatrix, double* pVector, double* pResult, int Size, int* pPivotPos) {
 	int RowIndex, Row;
 	for (int i = Size - 1; i >= 0; --i) {
 		RowIndex = pPivotPos[i];
 		pResult[i] = pVector[RowIndex] / pMatrix[Size * RowIndex + i];
-//#pragma omp parallel for private(Row)
 		for (int j = 0; j < i; ++j) {
 			Row = pPivotPos[j];
 			pVector[Row] -= pMatrix[Row * Size + i] * pResult[i];
 			pMatrix[Row * Size + i] = 0;
-
-			
 		}
 	}
 }
 
 // Function for the execution of Gauss algorithm
-void ParallelResultCalculation(double* pMatrix, double* pVector, double* pResult, int Size) {
+void ParallelResultCalculation(double* pMatrix, double* pVector, double* pResult, int Size,
+	double* pPartialMatrix, double* pPartialVector, int PartialSize,
+	double* pAdditionalMatrix, double* pAdditionalVector, int AdditionalSize, int*& pPivotPos, int*& pPivotIter) {
+	MPI_Barrier(MPI_COMM_WORLD);
 	// Memory allocation
 	pPivotPos = new int[Size];
 	pPivotIter = new int[Size];
@@ -198,20 +251,30 @@ void ParallelResultCalculation(double* pMatrix, double* pVector, double* pResult
 	for (int i = 0; i < Size; pPivotIter[i] = -1, ++i);
 
 	// Gaussian elimination
-	ParallelGaussianElimination(pMatrix, pVector, Size);
+	ParallelGaussianElimination(pPartialMatrix, pPartialVector, PartialSize, pAdditionalMatrix, pAdditionalVector, AdditionalSize, Size, pPivotPos, pPivotIter);
+
+	MPI_Barrier(MPI_COMM_WORLD);
+
+	MPI_Gather(pPartialMatrix, Size * PartialSize, MPI_DOUBLE, pMatrix, Size * PartialSize, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Gather(pPartialVector, PartialSize, MPI_DOUBLE, pVector, PartialSize, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+	if (ProcId == 0) {
+		for (int i = 0; i < Size % NProc; ++i) {
+			MPI_Recv(pMatrix + PartialSize * NProc * Size + i * Size, Size, MPI_DOUBLE, i + 1, 0, MPI_COMM_WORLD, &st);
+			MPI_Recv(pVector + PartialSize * NProc + i, 1, MPI_DOUBLE, i + 1, 0, MPI_COMM_WORLD, &st);
+		}
+	}
+	else if (AdditionalSize) {
+		MPI_Send(pAdditionalMatrix, Size, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+		MPI_Send(pAdditionalVector, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+	}
+
+	/*if (ProcId == 0)
+		PrintMatrix(pMatrix, Size, Size);*/
+
 	// Back substitution
-	ParallelBackSubstitution(pMatrix, pVector, pResult, Size);
-
-	// Memory deallocation
-	delete[] pPivotPos;
-	delete[] pPivotIter;
-}
-
-// Function for computational process termination
-void ProcessTermination(double* pMatrix, double* pVector, double* pResult) {
-	delete[] pMatrix;
-	delete[] pVector;
-	delete[] pResult;
+	if (ProcId == 0)
+		ParallelBackSubstitution(pMatrix, pVector, pResult, Size, pPivotPos);
 }
 
 // Function for testing the result
@@ -249,6 +312,17 @@ int main() {
 	int Size; // The sizes of the initial matrix and the vector
 	double start, finish, duration;
 
+	int PartialSize;
+	double* pPartialMatrix;
+	double* pPartialVector;
+
+	int AdditionalSize;
+	double* pAdditionalMatrix;
+	double* pAdditionalVector;
+
+	int* pPivotPos; // The Number of pivot rows selected at the iterations
+	int* pPivotIter; // The Iterations, at which the rows were pivots
+
 	MPI_Init(NULL, NULL);
 	MPI_Comm_size(MPI_COMM_WORLD, &NProc);
 	MPI_Comm_rank(MPI_COMM_WORLD, &ProcId);
@@ -256,8 +330,11 @@ int main() {
 	if (ProcId == 0)
 		printf("Parallel Gauss algorithm for solving linear systems\n");
 
+	MPI_Barrier(MPI_COMM_WORLD);
 	// Memory allocation and definition of objects' elements
-	ProcessInitialization(pMatrix, pVector, pResult, Size);
+	ProcessInitialization(pMatrix, pVector, pResult, 
+		pPartialMatrix, pPartialVector, Size, PartialSize, 
+		AdditionalSize, pAdditionalMatrix, pAdditionalVector);
 
 	//if (ProcId == 0) {
 	//	// The matrix and the vector output
@@ -269,10 +346,13 @@ int main() {
 
 	// Execution of Gauss algorithm
 	start = clock();
-	ParallelResultCalculation(pMatrix, pVector, pResult, Size);
+	ParallelResultCalculation(pMatrix, pVector, pResult, Size,
+		pPartialMatrix, pPartialVector, PartialSize,
+		pAdditionalMatrix, pAdditionalVector, AdditionalSize, pPivotPos, pPivotIter);
 	finish = clock();
 	duration = (finish - start) / CLOCKS_PER_SEC;
 
+	MPI_Barrier(MPI_COMM_WORLD);
 	if (ProcId == 0) {
 		// Testing the result
 		TestResult(pMatrix, pVector, pResult, Size);
@@ -284,9 +364,6 @@ int main() {
 		// Printing the execution time of Gauss method
 		printf("\nTime of execution: %f\n", duration);
 	}
-
-	// Computational process termination
-	ProcessTermination(pMatrix, pVector, pResult);
 
 	MPI_Finalize();
 

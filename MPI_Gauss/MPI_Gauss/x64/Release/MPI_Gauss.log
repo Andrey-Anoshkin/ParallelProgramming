@@ -1,0 +1,9 @@
+﻿  main.cpp
+C:\Users\PC\Desktop\University\ParallelProgramming\MPI_Gauss\MPI_Gauss\main.cpp(126,19): warning C4244: =: преобразование "double" в "int", возможна потеря данных
+C:\Users\PC\Desktop\University\ParallelProgramming\MPI_Gauss\MPI_Gauss\main.cpp(133,19): warning C4244: =: преобразование "double" в "int", возможна потеря данных
+  Создание кода
+  3 of 10 functions (30.0%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    0 functions had inline decision re-evaluated but remain unchanged
+  Создание кода завершено
+  MPI_Gauss.vcxproj -> C:\Users\PC\Desktop\University\ParallelProgramming\MPI_Gauss\x64\Release\MPI_Gauss.exe
