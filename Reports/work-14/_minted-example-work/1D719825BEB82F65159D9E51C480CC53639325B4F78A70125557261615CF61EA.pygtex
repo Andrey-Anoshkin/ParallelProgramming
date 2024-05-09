@@ -1,0 +1,373 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{// SerialGauss.cpp}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZlt{}stdio.h\PYGZgt{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZlt{}stdlib.h\PYGZgt{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZlt{}conio.h\PYGZgt{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZlt{}time.h\PYGZgt{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZlt{}math.h\PYGZgt{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}mpi.h\PYGZdq{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZlt{}iostream\PYGZgt{}}
+
+\PYG{k+kt}{int} \PYG{n}{NProc}\PYG{p}{,} \PYG{n}{ProcId}\PYG{p}{;}
+\PYG{n}{MPI\PYGZus{}Status} \PYG{n}{st}\PYG{p}{;}
+
+\PYG{c+c1}{// Function for formatted matrix output}
+\PYG{k+kt}{void} \PYG{n+nf}{PrintMatrix}\PYG{p}{(}\PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pMatrix}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{RowCount}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{ColCount}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+	\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZlt{}} \PYG{n}{RowCount}\PYG{p}{;} \PYG{o}{++}\PYG{n}{i}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+		\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{j} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{j} \PYG{o}{\PYGZlt{}} \PYG{n}{ColCount}\PYG{p}{;} \PYG{o}{++}\PYG{n}{j}\PYG{p}{)}
+			\PYG{n}{printf}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}\PYGZpc{}7.4f \PYGZdq{}}\PYG{p}{,} \PYG{n}{pMatrix}\PYG{p}{[}\PYG{n}{i} \PYG{o}{*} \PYG{n}{RowCount} \PYG{o}{+} \PYG{n}{j}\PYG{p}{]);}
+		\PYG{n}{printf}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{);}
+	\PYG{p}{\PYGZcb{}}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{c+c1}{// Function for formatted vector output}
+\PYG{k+kt}{void} \PYG{n+nf}{PrintVector}\PYG{p}{(}\PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pVector}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{Size}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+	\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZlt{}} \PYG{n}{Size}\PYG{p}{;} \PYG{o}{++}\PYG{n}{i}\PYG{p}{)}
+		\PYG{n}{printf}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}\PYGZpc{}7.4f \PYGZdq{}}\PYG{p}{,} \PYG{n}{pVector}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]);}
+\PYG{p}{\PYGZcb{}}
+
+
+\PYG{c+c1}{// Function for simple initialization of the matrix}
+\PYG{c+c1}{// and the vector elements}
+\PYG{k+kt}{void} \PYG{n+nf}{DummyDataInitialization}\PYG{p}{(}\PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pMatrix}\PYG{p}{,} \PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pVector}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{Size}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+	\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZlt{}} \PYG{n}{Size}\PYG{p}{;} \PYG{o}{++}\PYG{n}{i}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+		\PYG{n}{pVector}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{=} \PYG{n}{i} \PYG{o}{+} \PYG{l+m+mf}{1.0}\PYG{p}{;}
+		\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{j} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{j} \PYG{o}{\PYGZlt{}} \PYG{n}{Size}\PYG{p}{;} \PYG{o}{++}\PYG{n}{j}\PYG{p}{)}
+			\PYG{k}{if} \PYG{p}{(}\PYG{n}{j} \PYG{o}{\PYGZlt{}=} \PYG{n}{i}\PYG{p}{)}
+				\PYG{n}{pMatrix}\PYG{p}{[}\PYG{n}{i} \PYG{o}{*} \PYG{n}{Size} \PYG{o}{+} \PYG{n}{j}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{p}{;}
+			\PYG{k}{else}
+				\PYG{n}{pMatrix}\PYG{p}{[}\PYG{n}{i} \PYG{o}{*} \PYG{n}{Size} \PYG{o}{+} \PYG{n}{j}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+	\PYG{p}{\PYGZcb{}}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{c+c1}{// Function for random initialization of the matrix}
+\PYG{c+c1}{// and the vector elements}
+\PYG{k+kt}{void} \PYG{n+nf}{RandomDataInitialization}\PYG{p}{(}\PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pMatrix}\PYG{p}{,} \PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pVector}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{Size}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+	\PYG{n}{srand}\PYG{p}{(}\PYG{k+kt}{unsigned}\PYG{p}{(}\PYG{n}{clock}\PYG{p}{()));}
+	\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZlt{}} \PYG{n}{Size}\PYG{p}{;} \PYG{o}{++}\PYG{n}{i}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+		\PYG{n}{pVector}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{=} \PYG{n}{rand}\PYG{p}{()} \PYG{o}{/} \PYG{k+kt}{double}\PYG{p}{(}\PYG{l+m+mi}{1000}\PYG{p}{);}
+		\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{j} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{j} \PYG{o}{\PYGZlt{}} \PYG{n}{Size}\PYG{p}{;} \PYG{o}{++}\PYG{n}{j}\PYG{p}{)}
+			\PYG{n}{pMatrix}\PYG{p}{[}\PYG{n}{i} \PYG{o}{*} \PYG{n}{Size} \PYG{o}{+} \PYG{n}{j}\PYG{p}{]} \PYG{o}{=} \PYG{n}{rand}\PYG{p}{()} \PYG{o}{/} \PYG{k+kt}{double}\PYG{p}{(}\PYG{l+m+mi}{1000}\PYG{p}{);}
+	\PYG{p}{\PYGZcb{}}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{k+kt}{void} \PYG{n+nf}{MyDataInitialization}\PYG{p}{(}\PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pMatrix}\PYG{p}{,} \PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pVector}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{Size}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+	\PYG{n}{pMatrix}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{p}{;} \PYG{n}{pMatrix}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{p}{;} \PYG{n}{pMatrix}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{4}\PYG{p}{;} \PYG{n}{pMatrix}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{4}\PYG{p}{;} \PYG{n}{pMatrix}\PYG{p}{[}\PYG{l+m+mi}{4}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{9}\PYG{p}{;} \PYG{n}{pVector}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{9}\PYG{p}{;}
+	\PYG{n}{pMatrix}\PYG{p}{[}\PYG{l+m+mi}{5}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{2}\PYG{p}{;} \PYG{n}{pMatrix}\PYG{p}{[}\PYG{l+m+mi}{6}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{2}\PYG{p}{;} \PYG{n}{pMatrix}\PYG{p}{[}\PYG{l+m+mi}{7}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{17}\PYG{p}{;} \PYG{n}{pMatrix}\PYG{p}{[}\PYG{l+m+mi}{8}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{17}\PYG{p}{;} \PYG{n}{pMatrix}\PYG{p}{[}\PYG{l+m+mi}{9}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{82}\PYG{p}{;} \PYG{n}{pVector}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{146}\PYG{p}{;}
+	\PYG{n}{pMatrix}\PYG{p}{[}\PYG{l+m+mi}{10}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{2}\PYG{p}{;} \PYG{n}{pMatrix}\PYG{p}{[}\PYG{l+m+mi}{11}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{pMatrix}\PYG{p}{[}\PYG{l+m+mi}{12}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{3}\PYG{p}{;} \PYG{n}{pMatrix}\PYG{p}{[}\PYG{l+m+mi}{13}\PYG{p}{]} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{;} \PYG{n}{pMatrix}\PYG{p}{[}\PYG{l+m+mi}{14}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{4}\PYG{p}{;} \PYG{n}{pVector}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{10}\PYG{p}{;}
+	\PYG{n}{pMatrix}\PYG{p}{[}\PYG{l+m+mi}{15}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{pMatrix}\PYG{p}{[}\PYG{l+m+mi}{16}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{p}{;} \PYG{n}{pMatrix}\PYG{p}{[}\PYG{l+m+mi}{17}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{4}\PYG{p}{;} \PYG{n}{pMatrix}\PYG{p}{[}\PYG{l+m+mi}{18}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{12}\PYG{p}{;} \PYG{n}{pMatrix}\PYG{p}{[}\PYG{l+m+mi}{19}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{27}\PYG{p}{;} \PYG{n}{pVector}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{]} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{26}\PYG{p}{;}
+	\PYG{n}{pMatrix}\PYG{p}{[}\PYG{l+m+mi}{20}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{p}{;} \PYG{n}{pMatrix}\PYG{p}{[}\PYG{l+m+mi}{21}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{2}\PYG{p}{;} \PYG{n}{pMatrix}\PYG{p}{[}\PYG{l+m+mi}{22}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{2}\PYG{p}{;} \PYG{n}{pMatrix}\PYG{p}{[}\PYG{l+m+mi}{23}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{10}\PYG{p}{;} \PYG{n}{pMatrix}\PYG{p}{[}\PYG{l+m+mi}{24}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{pVector}\PYG{p}{[}\PYG{l+m+mi}{4}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{37}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{c+c1}{// Function for memory allocation and definition of the objectselements}
+\PYG{k+kt}{void} \PYG{n+nf}{ProcessInitialization}\PYG{p}{(}\PYG{k+kt}{double}\PYG{o}{*\PYGZam{}} \PYG{n}{pMatrix}\PYG{p}{,} \PYG{k+kt}{double}\PYG{o}{*\PYGZam{}} \PYG{n}{pVector}\PYG{p}{,} \PYG{k+kt}{double}\PYG{o}{*\PYGZam{}} \PYG{n}{pResult}\PYG{p}{,}
+	\PYG{k+kt}{double}\PYG{o}{*\PYGZam{}} \PYG{n}{pPartialMatrix}\PYG{p}{,} \PYG{k+kt}{double}\PYG{o}{*\PYGZam{}} \PYG{n}{pPartialVector}\PYG{p}{,} \PYG{k+kt}{int}\PYG{o}{\PYGZam{}} \PYG{n}{Size}\PYG{p}{,} \PYG{k+kt}{int}\PYG{o}{\PYGZam{}} \PYG{n}{PartialSize}\PYG{p}{,}
+	\PYG{k+kt}{int}\PYG{o}{\PYGZam{}} \PYG{n}{AdditionalSize}\PYG{p}{,} \PYG{k+kt}{double}\PYG{o}{*\PYGZam{}} \PYG{n}{pAdditionalMatrix}\PYG{p}{,} \PYG{k+kt}{double}\PYG{o}{*\PYGZam{}} \PYG{n}{pAdditionalVector}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+	\PYG{n}{MPI\PYGZus{}Barrier}\PYG{p}{(}\PYG{n}{MPI\PYGZus{}COMM\PYGZus{}WORLD}\PYG{p}{);}
+
+	\PYG{n}{Size} \PYG{o}{=} \PYG{l+m+mi}{5}\PYG{p}{;}
+
+	\PYG{c+c1}{// Memory allocation}
+	\PYG{n}{pMatrix} \PYG{o}{=} \PYG{k}{new} \PYG{k+kt}{double}\PYG{p}{[}\PYG{n}{Size} \PYG{o}{*} \PYG{n}{Size}\PYG{p}{];}
+	\PYG{n}{pVector} \PYG{o}{=} \PYG{k}{new} \PYG{k+kt}{double}\PYG{p}{[}\PYG{n}{Size}\PYG{p}{];}
+	\PYG{n}{pResult} \PYG{o}{=} \PYG{k}{new} \PYG{k+kt}{double}\PYG{p}{[}\PYG{n}{Size}\PYG{p}{];}
+
+	\PYG{n}{PartialSize} \PYG{o}{=} \PYG{n}{Size} \PYG{o}{/} \PYG{n}{NProc}\PYG{p}{;}
+
+	\PYG{c+c1}{// Partial arrays memory allocation}
+	\PYG{n}{pPartialMatrix} \PYG{o}{=} \PYG{k}{new} \PYG{k+kt}{double}\PYG{p}{[}\PYG{n}{Size} \PYG{o}{*} \PYG{n}{PartialSize}\PYG{p}{];}
+	\PYG{n}{pPartialVector} \PYG{o}{=} \PYG{k}{new} \PYG{k+kt}{double}\PYG{p}{[}\PYG{n}{PartialSize}\PYG{p}{];}
+
+	\PYG{n}{AdditionalSize} \PYG{o}{=} \PYG{p}{((}\PYG{n}{ProcId} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{)} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{p}{(}\PYG{n}{ProcId} \PYG{o}{\PYGZlt{}=} \PYG{p}{(}\PYG{n}{Size} \PYG{o}{\PYGZpc{}} \PYG{n}{NProc}\PYG{p}{))} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{p}{((}\PYG{n}{Size} \PYG{o}{\PYGZpc{}} \PYG{n}{NProc}\PYG{p}{)} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{));}
+
+	\PYG{c+c1}{// Additional arrays memory allocation}
+	\PYG{n}{pAdditionalMatrix} \PYG{o}{=} \PYG{k}{new} \PYG{k+kt}{double}\PYG{p}{[}\PYG{n}{Size} \PYG{o}{*} \PYG{n}{AdditionalSize}\PYG{p}{];}
+	\PYG{n}{pAdditionalVector} \PYG{o}{=} \PYG{k}{new} \PYG{k+kt}{double}\PYG{p}{[}\PYG{n}{AdditionalSize}\PYG{p}{];}
+
+	\PYG{k}{if} \PYG{p}{(}\PYG{n}{ProcId} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+		\PYG{c+c1}{// Initialization of the matrix and the vector elements}
+		\PYG{c+c1}{//DummyDataInitialization(pMatrix, pVector, Size);}
+		\PYG{c+c1}{//RandomDataInitialization(pMatrix, pVector, Size);}
+		\PYG{n}{MyDataInitialization}\PYG{p}{(}\PYG{n}{pMatrix}\PYG{p}{,} \PYG{n}{pVector}\PYG{p}{,} \PYG{n}{Size}\PYG{p}{);}
+	\PYG{p}{\PYGZcb{}}
+	
+	\PYG{n}{MPI\PYGZus{}Scatter}\PYG{p}{(}\PYG{n}{pMatrix}\PYG{p}{,} \PYG{n}{Size} \PYG{o}{*} \PYG{n}{PartialSize}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}DOUBLE}\PYG{p}{,} \PYG{n}{pPartialMatrix}\PYG{p}{,} \PYG{n}{Size} \PYG{o}{*} \PYG{n}{PartialSize}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}DOUBLE}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}COMM\PYGZus{}WORLD}\PYG{p}{);}
+	\PYG{n}{MPI\PYGZus{}Scatter}\PYG{p}{(}\PYG{n}{pVector}\PYG{p}{,} \PYG{n}{PartialSize}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}DOUBLE}\PYG{p}{,} \PYG{n}{pPartialVector}\PYG{p}{,} \PYG{n}{PartialSize}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}DOUBLE}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}COMM\PYGZus{}WORLD}\PYG{p}{);}
+
+	\PYG{k}{if} \PYG{p}{(}\PYG{n}{Size} \PYG{o}{\PYGZpc{}} \PYG{n}{NProc}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+		\PYG{k}{if} \PYG{p}{(}\PYG{n}{ProcId} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{)}
+			\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZlt{}} \PYG{n}{Size} \PYG{o}{\PYGZpc{}} \PYG{n}{NProc}\PYG{p}{;} \PYG{o}{++}\PYG{n}{i}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+				\PYG{n}{MPI\PYGZus{}Send}\PYG{p}{(}\PYG{n}{pMatrix} \PYG{o}{+} \PYG{n}{Size} \PYG{o}{*} \PYG{p}{(}\PYG{n}{PartialSize} \PYG{o}{*} \PYG{n}{NProc} \PYG{o}{+} \PYG{n}{i}\PYG{p}{),} \PYG{n}{Size}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}DOUBLE}\PYG{p}{,} \PYG{n}{i} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}COMM\PYGZus{}WORLD}\PYG{p}{);}
+				\PYG{n}{MPI\PYGZus{}Send}\PYG{p}{(}\PYG{n}{pVector} \PYG{o}{+} \PYG{p}{(}\PYG{n}{PartialSize} \PYG{o}{*} \PYG{n}{NProc} \PYG{o}{+} \PYG{n}{i}\PYG{p}{),} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}DOUBLE}\PYG{p}{,} \PYG{n}{i} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}COMM\PYGZus{}WORLD}\PYG{p}{);}
+			\PYG{p}{\PYGZcb{}}
+		\PYG{k}{else} \PYG{k}{if} \PYG{p}{(}\PYG{n}{AdditionalSize}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+			\PYG{n}{MPI\PYGZus{}Recv}\PYG{p}{(}\PYG{n}{pAdditionalMatrix}\PYG{p}{,} \PYG{n}{Size}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}DOUBLE}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}COMM\PYGZus{}WORLD}\PYG{p}{,} \PYG{o}{\PYGZam{}}\PYG{n}{st}\PYG{p}{);}
+			\PYG{n}{MPI\PYGZus{}Recv}\PYG{p}{(}\PYG{n}{pAdditionalVector}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}DOUBLE}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}COMM\PYGZus{}WORLD}\PYG{p}{,} \PYG{o}{\PYGZam{}}\PYG{n}{st}\PYG{p}{);}
+		\PYG{p}{\PYGZcb{}}
+	\PYG{p}{\PYGZcb{}}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{c+c1}{// Finding the pivot row}
+\PYG{k+kt}{int} \PYG{n+nf}{ParallelFindPivotRow}\PYG{p}{(}\PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pPartialMatrix}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{PartialSize}\PYG{p}{,} \PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pAdditionalMatrix}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{AdditionalSize}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{Iter}\PYG{p}{,} \PYG{k+kt}{int}\PYG{o}{*} \PYG{n}{pPivotIter}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{Size}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+	\PYG{n}{MPI\PYGZus{}Barrier}\PYG{p}{(}\PYG{n}{MPI\PYGZus{}COMM\PYGZus{}WORLD}\PYG{p}{);}
+	\PYG{k+kt}{int} \PYG{n}{PivotRow} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{;} \PYG{c+c1}{// The index of the pivot row}
+	\PYG{k+kt}{int} \PYG{n}{MaxValue} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{c+c1}{// The value of the pivot element}
+
+	\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZlt{}} \PYG{n}{PartialSize}\PYG{p}{;} \PYG{o}{++}\PYG{n}{i}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+		\PYG{k}{if} \PYG{p}{((}\PYG{n}{pPivotIter}\PYG{p}{[}\PYG{n}{i} \PYG{o}{+} \PYG{n}{PartialSize} \PYG{o}{*} \PYG{n}{ProcId}\PYG{p}{]} \PYG{o}{==} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{)} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{p}{(}\PYG{n}{fabs}\PYG{p}{(}\PYG{n}{pPartialMatrix}\PYG{p}{[}\PYG{n}{i} \PYG{o}{*} \PYG{n}{Size} \PYG{o}{+} \PYG{n}{Iter}\PYG{p}{])} \PYG{o}{\PYGZgt{}=} \PYG{n}{MaxValue}\PYG{p}{))} \PYG{p}{\PYGZob{}}
+			\PYG{n}{PivotRow} \PYG{o}{=} \PYG{n}{i} \PYG{o}{+} \PYG{n}{PartialSize} \PYG{o}{*} \PYG{n}{ProcId}\PYG{p}{;}
+			\PYG{n}{MaxValue} \PYG{o}{=} \PYG{n}{fabs}\PYG{p}{(}\PYG{n}{pPartialMatrix}\PYG{p}{[}\PYG{n}{i} \PYG{o}{*} \PYG{n}{Size} \PYG{o}{+} \PYG{n}{Iter}\PYG{p}{]);}
+		\PYG{p}{\PYGZcb{}}
+	\PYG{p}{\PYGZcb{}}
+
+	\PYG{k}{if} \PYG{p}{(}\PYG{n}{AdditionalSize}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+		\PYG{k}{if} \PYG{p}{(}\PYG{n}{pPivotIter}\PYG{p}{[}\PYG{n}{PartialSize} \PYG{o}{*} \PYG{n}{NProc} \PYG{o}{+} \PYG{n}{ProcId} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{==} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{fabs}\PYG{p}{(}\PYG{n}{pAdditionalMatrix}\PYG{p}{[}\PYG{n}{Iter}\PYG{p}{])} \PYG{o}{\PYGZgt{}=} \PYG{n}{MaxValue}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+			\PYG{n}{PivotRow} \PYG{o}{=} \PYG{n}{PartialSize} \PYG{o}{*} \PYG{n}{NProc} \PYG{o}{+} \PYG{n}{ProcId} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}\PYG{p}{;}
+			\PYG{n}{MaxValue} \PYG{o}{=} \PYG{n}{fabs}\PYG{p}{(}\PYG{n}{pAdditionalMatrix}\PYG{p}{[}\PYG{n}{Iter}\PYG{p}{]);}
+		\PYG{p}{\PYGZcb{}}
+	\PYG{p}{\PYGZcb{}}
+
+	\PYG{k}{if} \PYG{p}{(}\PYG{n}{ProcId} \PYG{o}{!=} \PYG{l+m+mi}{0}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+		\PYG{n}{MPI\PYGZus{}Send}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n}{MaxValue}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}INT}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}COMM\PYGZus{}WORLD}\PYG{p}{);}
+		\PYG{n}{MPI\PYGZus{}Send}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n}{PivotRow}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}INT}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}COMM\PYGZus{}WORLD}\PYG{p}{);}
+	\PYG{p}{\PYGZcb{}}
+	\PYG{k}{else} \PYG{p}{\PYGZob{}}
+		\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZlt{}} \PYG{n}{NProc}\PYG{p}{;} \PYG{o}{++}\PYG{n}{i}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+			\PYG{k+kt}{int} \PYG{n}{TMaxValue}\PYG{p}{,} \PYG{n}{TPivotRow}\PYG{p}{;}
+			\PYG{n}{MPI\PYGZus{}Recv}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n}{TMaxValue}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}INT}\PYG{p}{,} \PYG{n}{i}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}COMM\PYGZus{}WORLD}\PYG{p}{,} \PYG{o}{\PYGZam{}}\PYG{n}{st}\PYG{p}{);}
+			\PYG{n}{MPI\PYGZus{}Recv}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n}{TPivotRow}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}INT}\PYG{p}{,} \PYG{n}{i}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}COMM\PYGZus{}WORLD}\PYG{p}{,} \PYG{o}{\PYGZam{}}\PYG{n}{st}\PYG{p}{);}
+			\PYG{k}{if} \PYG{p}{(}\PYG{n}{TMaxValue} \PYG{o}{\PYGZgt{}} \PYG{n}{MaxValue}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+				\PYG{n}{MaxValue} \PYG{o}{=} \PYG{n}{TMaxValue}\PYG{p}{;}
+				\PYG{n}{PivotRow} \PYG{o}{=} \PYG{n}{TPivotRow}\PYG{p}{;}
+			\PYG{p}{\PYGZcb{}}
+		\PYG{p}{\PYGZcb{}}
+	\PYG{p}{\PYGZcb{}}
+
+	\PYG{n}{MPI\PYGZus{}Bcast}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n}{PivotRow}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}INT}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}COMM\PYGZus{}WORLD}\PYG{p}{);}
+
+	\PYG{k}{return} \PYG{n}{PivotRow}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{c+c1}{// Column elimination}
+\PYG{k+kt}{void} \PYG{n+nf}{ParallelColumnElimination}\PYG{p}{(}\PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pPartialMatrix}\PYG{p}{,} \PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pPartialVector}\PYG{p}{,} \PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pAdditionalMatrix}\PYG{p}{,} \PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pAdditionalVector}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{Pivot}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{Iter}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{Size}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{PartialSize}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{AdditionalSize}\PYG{p}{,} \PYG{k+kt}{int}\PYG{o}{*} \PYG{n}{pPivotIter}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+	\PYG{n}{MPI\PYGZus{}Barrier}\PYG{p}{(}\PYG{n}{MPI\PYGZus{}COMM\PYGZus{}WORLD}\PYG{p}{);}
+	\PYG{k+kt}{double} \PYG{n}{PivotValue}\PYG{p}{,} \PYG{n}{PivotFactor}\PYG{p}{;}
+	\PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{PivotRow} \PYG{o}{=} \PYG{k}{new} \PYG{k+kt}{double}\PYG{p}{[}\PYG{n}{Size} \PYG{o}{\PYGZhy{}} \PYG{n}{Iter}\PYG{p}{];}
+
+	\PYG{k}{if} \PYG{p}{(}\PYG{n}{Pivot} \PYG{o}{\PYGZlt{}=} \PYG{n}{NProc} \PYG{o}{*} \PYG{n}{PartialSize} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+		\PYG{k}{if} \PYG{p}{(}\PYG{n}{Pivot} \PYG{o}{\PYGZgt{}=} \PYG{n}{ProcId} \PYG{o}{*} \PYG{n}{PartialSize} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{Pivot} \PYG{o}{\PYGZlt{}} \PYG{p}{(}\PYG{n}{ProcId} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{)} \PYG{o}{*} \PYG{n}{PartialSize}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+			\PYG{n}{PivotValue} \PYG{o}{=} \PYG{n}{pPartialVector}\PYG{p}{[(}\PYG{n}{Pivot} \PYG{o}{\PYGZhy{}} \PYG{n}{ProcId} \PYG{o}{*} \PYG{n}{PartialSize}\PYG{p}{)];}
+			\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZlt{}} \PYG{n}{Size} \PYG{o}{\PYGZhy{}} \PYG{n}{Iter}\PYG{p}{;} \PYG{o}{++}\PYG{n}{i}\PYG{p}{)}
+				\PYG{n}{PivotRow}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{=} \PYG{n}{pPartialMatrix}\PYG{p}{[(}\PYG{n}{Pivot} \PYG{o}{\PYGZhy{}} \PYG{n}{ProcId} \PYG{o}{*} \PYG{n}{PartialSize}\PYG{p}{)} \PYG{o}{*} \PYG{n}{Size} \PYG{o}{+} \PYG{n}{Iter} \PYG{o}{+} \PYG{n}{i}\PYG{p}{];}
+			\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZlt{}} \PYG{n}{NProc}\PYG{p}{;} \PYG{o}{++}\PYG{n}{i}\PYG{p}{)}
+				\PYG{k}{if} \PYG{p}{(}\PYG{n}{i} \PYG{o}{!=} \PYG{n}{ProcId}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+					\PYG{n}{MPI\PYGZus{}Send}\PYG{p}{(}\PYG{n}{PivotRow}\PYG{p}{,} \PYG{n}{Size} \PYG{o}{\PYGZhy{}} \PYG{n}{Iter}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}DOUBLE}\PYG{p}{,} \PYG{n}{i}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}COMM\PYGZus{}WORLD}\PYG{p}{);}
+					\PYG{n}{MPI\PYGZus{}Send}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n}{PivotValue}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}DOUBLE}\PYG{p}{,} \PYG{n}{i}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}COMM\PYGZus{}WORLD}\PYG{p}{);}
+				\PYG{p}{\PYGZcb{}}
+		\PYG{p}{\PYGZcb{}}
+		\PYG{k}{else} \PYG{p}{\PYGZob{}}
+			\PYG{n}{MPI\PYGZus{}Recv}\PYG{p}{(}\PYG{n}{PivotRow}\PYG{p}{,} \PYG{n}{Size} \PYG{o}{\PYGZhy{}} \PYG{n}{Iter}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}DOUBLE}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}ANY\PYGZus{}SOURCE}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}COMM\PYGZus{}WORLD}\PYG{p}{,} \PYG{o}{\PYGZam{}}\PYG{n}{st}\PYG{p}{);}
+			\PYG{n}{MPI\PYGZus{}Recv}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n}{PivotValue}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}DOUBLE}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}ANY\PYGZus{}SOURCE}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}COMM\PYGZus{}WORLD}\PYG{p}{,} \PYG{o}{\PYGZam{}}\PYG{n}{st}\PYG{p}{);}
+		\PYG{p}{\PYGZcb{}}
+	\PYG{p}{\PYGZcb{}}
+	\PYG{k}{else}
+		\PYG{k}{if} \PYG{p}{(}\PYG{n}{Pivot} \PYG{o}{==} \PYG{n}{NProc} \PYG{o}{*} \PYG{n}{PartialSize} \PYG{o}{+} \PYG{n}{ProcId} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+			\PYG{n}{PivotValue} \PYG{o}{=} \PYG{n}{pAdditionalVector}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{];}
+			\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZlt{}} \PYG{n}{Size} \PYG{o}{\PYGZhy{}} \PYG{n}{Iter}\PYG{p}{;} \PYG{o}{++}\PYG{n}{i}\PYG{p}{)}
+				\PYG{n}{PivotRow}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{=} \PYG{n}{pAdditionalMatrix}\PYG{p}{[}\PYG{n}{Iter} \PYG{o}{+} \PYG{n}{i}\PYG{p}{];}
+			\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZlt{}} \PYG{n}{NProc}\PYG{p}{;} \PYG{o}{++}\PYG{n}{i}\PYG{p}{)}
+				\PYG{k}{if} \PYG{p}{(}\PYG{n}{i} \PYG{o}{!=} \PYG{n}{ProcId}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+					\PYG{n}{MPI\PYGZus{}Send}\PYG{p}{(}\PYG{n}{PivotRow}\PYG{p}{,} \PYG{n}{Size} \PYG{o}{\PYGZhy{}} \PYG{n}{Iter}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}DOUBLE}\PYG{p}{,} \PYG{n}{i}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}COMM\PYGZus{}WORLD}\PYG{p}{);}
+					\PYG{n}{MPI\PYGZus{}Send}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n}{PivotValue}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}DOUBLE}\PYG{p}{,} \PYG{n}{i}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}COMM\PYGZus{}WORLD}\PYG{p}{);}
+				\PYG{p}{\PYGZcb{}}
+		\PYG{p}{\PYGZcb{}}
+		\PYG{k}{else} \PYG{p}{\PYGZob{}}
+			\PYG{n}{MPI\PYGZus{}Recv}\PYG{p}{(}\PYG{n}{PivotRow}\PYG{p}{,} \PYG{n}{Size} \PYG{o}{\PYGZhy{}} \PYG{n}{Iter}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}DOUBLE}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}ANY\PYGZus{}SOURCE}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}COMM\PYGZus{}WORLD}\PYG{p}{,} \PYG{o}{\PYGZam{}}\PYG{n}{st}\PYG{p}{);}
+			\PYG{n}{MPI\PYGZus{}Recv}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n}{PivotValue}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}DOUBLE}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}ANY\PYGZus{}SOURCE}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}COMM\PYGZus{}WORLD}\PYG{p}{,} \PYG{o}{\PYGZam{}}\PYG{n}{st}\PYG{p}{);}
+		\PYG{p}{\PYGZcb{}}
+
+	\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZlt{}} \PYG{n}{PartialSize}\PYG{p}{;} \PYG{o}{++}\PYG{n}{i}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+		\PYG{k}{if} \PYG{p}{(}\PYG{n}{pPivotIter}\PYG{p}{[}\PYG{n}{i} \PYG{o}{+} \PYG{n}{PartialSize} \PYG{o}{*} \PYG{n}{ProcId}\PYG{p}{]} \PYG{o}{==} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+			\PYG{n}{PivotFactor} \PYG{o}{=} \PYG{n}{pPartialMatrix}\PYG{p}{[}\PYG{n}{i} \PYG{o}{*} \PYG{n}{Size} \PYG{o}{+} \PYG{n}{Iter}\PYG{p}{]} \PYG{o}{/} \PYG{n}{PivotRow}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{];}
+			\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{j} \PYG{o}{=} \PYG{n}{Iter}\PYG{p}{;} \PYG{n}{j} \PYG{o}{\PYGZlt{}} \PYG{n}{Size}\PYG{p}{;} \PYG{o}{++}\PYG{n}{j}\PYG{p}{)}
+				\PYG{n}{pPartialMatrix}\PYG{p}{[}\PYG{n}{i} \PYG{o}{*} \PYG{n}{Size} \PYG{o}{+} \PYG{n}{j}\PYG{p}{]} \PYG{o}{\PYGZhy{}=} \PYG{n}{PivotFactor} \PYG{o}{*} \PYG{n}{PivotRow}\PYG{p}{[}\PYG{n}{j} \PYG{o}{\PYGZhy{}} \PYG{n}{Iter}\PYG{p}{];}
+			\PYG{n}{pPartialVector}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{\PYGZhy{}=} \PYG{n}{PivotFactor} \PYG{o}{*} \PYG{n}{PivotValue}\PYG{p}{;}
+		\PYG{p}{\PYGZcb{}}
+	\PYG{p}{\PYGZcb{}}
+
+	\PYG{k}{if} \PYG{p}{(}\PYG{n}{AdditionalSize}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+		\PYG{k}{if} \PYG{p}{(}\PYG{n}{pPivotIter}\PYG{p}{[}\PYG{n}{NProc} \PYG{o}{*} \PYG{n}{PartialSize} \PYG{o}{+} \PYG{n}{ProcId} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{==} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+			\PYG{n}{PivotFactor} \PYG{o}{=} \PYG{n}{pAdditionalMatrix}\PYG{p}{[}\PYG{n}{Iter}\PYG{p}{]} \PYG{o}{/} \PYG{n}{PivotRow}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{];}
+			\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{j} \PYG{o}{=} \PYG{n}{Iter}\PYG{p}{;} \PYG{n}{j} \PYG{o}{\PYGZlt{}} \PYG{n}{Size}\PYG{p}{;} \PYG{o}{++}\PYG{n}{j}\PYG{p}{)}
+				\PYG{n}{pAdditionalMatrix}\PYG{p}{[}\PYG{n}{j}\PYG{p}{]} \PYG{o}{\PYGZhy{}=} \PYG{n}{PivotFactor} \PYG{o}{*} \PYG{n}{PivotRow}\PYG{p}{[}\PYG{n}{j} \PYG{o}{\PYGZhy{}} \PYG{n}{Iter}\PYG{p}{];}
+			\PYG{n}{pAdditionalVector}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]} \PYG{o}{\PYGZhy{}=} \PYG{n}{PivotFactor} \PYG{o}{*} \PYG{n}{PivotValue}\PYG{p}{;}
+		\PYG{p}{\PYGZcb{}}
+	\PYG{p}{\PYGZcb{}}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{c+c1}{// Gaussian elimination}
+\PYG{k+kt}{void} \PYG{n+nf}{ParallelGaussianElimination}\PYG{p}{(}\PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pPartialMatrix}\PYG{p}{,} \PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pPartialVector}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{PartialSize}\PYG{p}{,}
+	\PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pAdditionalMatrix}\PYG{p}{,} \PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pAdditionalVector}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{AdditionalSize}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{Size}\PYG{p}{,} \PYG{k+kt}{int}\PYG{o}{*} \PYG{n}{pPivotPos}\PYG{p}{,} \PYG{k+kt}{int}\PYG{o}{*} \PYG{n}{pPivotIter}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+	\PYG{c+c1}{//MPI\PYGZus{}Barrier(MPI\PYGZus{}COMM\PYGZus{}WORLD);}
+	\PYG{k+kt}{int} \PYG{n}{PivotRow}\PYG{p}{;} \PYG{c+c1}{// The number of the current pivot row}
+	\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{Iter} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{Iter} \PYG{o}{\PYGZlt{}} \PYG{n}{Size}\PYG{p}{;} \PYG{o}{++}\PYG{n}{Iter}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+		\PYG{c+c1}{// Finding the pivot row}
+		\PYG{n}{PivotRow} \PYG{o}{=} \PYG{n}{ParallelFindPivotRow}\PYG{p}{(}\PYG{n}{pPartialMatrix}\PYG{p}{,} \PYG{n}{PartialSize}\PYG{p}{,} \PYG{n}{pAdditionalMatrix}\PYG{p}{,} \PYG{n}{AdditionalSize}\PYG{p}{,} \PYG{n}{Iter}\PYG{p}{,} \PYG{n}{pPivotIter}\PYG{p}{,} \PYG{n}{Size}\PYG{p}{);}
+		\PYG{n}{pPivotPos}\PYG{p}{[}\PYG{n}{Iter}\PYG{p}{]} \PYG{o}{=} \PYG{n}{PivotRow}\PYG{p}{;}
+		\PYG{n}{pPivotIter}\PYG{p}{[}\PYG{n}{PivotRow}\PYG{p}{]} \PYG{o}{=} \PYG{n}{Iter}\PYG{p}{;}
+
+		\PYG{c+cm}{/*if (ProcId == 0) \PYGZob{}}
+\PYG{c+cm}{			for (int i = 0; i \PYGZlt{} Size; ++i)}
+\PYG{c+cm}{				std::cout \PYGZlt{}\PYGZlt{} pPivotPos[i] \PYGZlt{}\PYGZlt{} \PYGZdq{} \PYGZdq{};}
+\PYG{c+cm}{			std::cout \PYGZlt{}\PYGZlt{} \PYGZdq{}\PYGZbs{}n\PYGZdq{};}
+\PYG{c+cm}{		\PYGZcb{}*/}
+
+		\PYG{n}{ParallelColumnElimination}\PYG{p}{(}\PYG{n}{pPartialMatrix}\PYG{p}{,} \PYG{n}{pPartialVector}\PYG{p}{,} \PYG{n}{pAdditionalMatrix}\PYG{p}{,} \PYG{n}{pAdditionalVector}\PYG{p}{,} \PYG{n}{PivotRow}\PYG{p}{,} \PYG{n}{Iter}\PYG{p}{,} \PYG{n}{Size}\PYG{p}{,} \PYG{n}{PartialSize}\PYG{p}{,} \PYG{n}{AdditionalSize}\PYG{p}{,} \PYG{n}{pPivotIter}\PYG{p}{);}
+	\PYG{p}{\PYGZcb{}}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{c+c1}{// Back substution}
+\PYG{k+kt}{void} \PYG{n+nf}{ParallelBackSubstitution}\PYG{p}{(}\PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pMatrix}\PYG{p}{,} \PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pVector}\PYG{p}{,} \PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pResult}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{Size}\PYG{p}{,} \PYG{k+kt}{int}\PYG{o}{*} \PYG{n}{pPivotPos}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+	\PYG{k+kt}{int} \PYG{n}{RowIndex}\PYG{p}{,} \PYG{n}{Row}\PYG{p}{;}
+	\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{i} \PYG{o}{=} \PYG{n}{Size} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZgt{}=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{o}{\PYGZhy{}\PYGZhy{}}\PYG{n}{i}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+		\PYG{n}{RowIndex} \PYG{o}{=} \PYG{n}{pPivotPos}\PYG{p}{[}\PYG{n}{i}\PYG{p}{];}
+		\PYG{n}{pResult}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{=} \PYG{n}{pVector}\PYG{p}{[}\PYG{n}{RowIndex}\PYG{p}{]} \PYG{o}{/} \PYG{n}{pMatrix}\PYG{p}{[}\PYG{n}{Size} \PYG{o}{*} \PYG{n}{RowIndex} \PYG{o}{+} \PYG{n}{i}\PYG{p}{];}
+		\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{j} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{j} \PYG{o}{\PYGZlt{}} \PYG{n}{i}\PYG{p}{;} \PYG{o}{++}\PYG{n}{j}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+			\PYG{n}{Row} \PYG{o}{=} \PYG{n}{pPivotPos}\PYG{p}{[}\PYG{n}{j}\PYG{p}{];}
+			\PYG{n}{pVector}\PYG{p}{[}\PYG{n}{Row}\PYG{p}{]} \PYG{o}{\PYGZhy{}=} \PYG{n}{pMatrix}\PYG{p}{[}\PYG{n}{Row} \PYG{o}{*} \PYG{n}{Size} \PYG{o}{+} \PYG{n}{i}\PYG{p}{]} \PYG{o}{*} \PYG{n}{pResult}\PYG{p}{[}\PYG{n}{i}\PYG{p}{];}
+			\PYG{n}{pMatrix}\PYG{p}{[}\PYG{n}{Row} \PYG{o}{*} \PYG{n}{Size} \PYG{o}{+} \PYG{n}{i}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+		\PYG{p}{\PYGZcb{}}
+	\PYG{p}{\PYGZcb{}}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{c+c1}{// Function for the execution of Gauss algorithm}
+\PYG{k+kt}{void} \PYG{n+nf}{ParallelResultCalculation}\PYG{p}{(}\PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pMatrix}\PYG{p}{,} \PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pVector}\PYG{p}{,} \PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pResult}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{Size}\PYG{p}{,}
+	\PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pPartialMatrix}\PYG{p}{,} \PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pPartialVector}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{PartialSize}\PYG{p}{,}
+	\PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pAdditionalMatrix}\PYG{p}{,} \PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pAdditionalVector}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{AdditionalSize}\PYG{p}{,} \PYG{k+kt}{int}\PYG{o}{*\PYGZam{}} \PYG{n}{pPivotPos}\PYG{p}{,} \PYG{k+kt}{int}\PYG{o}{*\PYGZam{}} \PYG{n}{pPivotIter}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+	\PYG{n}{MPI\PYGZus{}Barrier}\PYG{p}{(}\PYG{n}{MPI\PYGZus{}COMM\PYGZus{}WORLD}\PYG{p}{);}
+	\PYG{c+c1}{// Memory allocation}
+	\PYG{n}{pPivotPos} \PYG{o}{=} \PYG{k}{new} \PYG{k+kt}{int}\PYG{p}{[}\PYG{n}{Size}\PYG{p}{];}
+	\PYG{n}{pPivotIter} \PYG{o}{=} \PYG{k}{new} \PYG{k+kt}{int}\PYG{p}{[}\PYG{n}{Size}\PYG{p}{];}
+
+	\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZlt{}} \PYG{n}{Size}\PYG{p}{;} \PYG{n}{pPivotIter}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{o}{++}\PYG{n}{i}\PYG{p}{);}
+
+	\PYG{c+c1}{// Gaussian elimination}
+	\PYG{n}{ParallelGaussianElimination}\PYG{p}{(}\PYG{n}{pPartialMatrix}\PYG{p}{,} \PYG{n}{pPartialVector}\PYG{p}{,} \PYG{n}{PartialSize}\PYG{p}{,} \PYG{n}{pAdditionalMatrix}\PYG{p}{,} \PYG{n}{pAdditionalVector}\PYG{p}{,} \PYG{n}{AdditionalSize}\PYG{p}{,} \PYG{n}{Size}\PYG{p}{,} \PYG{n}{pPivotPos}\PYG{p}{,} \PYG{n}{pPivotIter}\PYG{p}{);}
+
+	\PYG{n}{MPI\PYGZus{}Barrier}\PYG{p}{(}\PYG{n}{MPI\PYGZus{}COMM\PYGZus{}WORLD}\PYG{p}{);}
+
+	\PYG{n}{MPI\PYGZus{}Gather}\PYG{p}{(}\PYG{n}{pPartialMatrix}\PYG{p}{,} \PYG{n}{Size} \PYG{o}{*} \PYG{n}{PartialSize}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}DOUBLE}\PYG{p}{,} \PYG{n}{pMatrix}\PYG{p}{,} \PYG{n}{Size} \PYG{o}{*} \PYG{n}{PartialSize}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}DOUBLE}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}COMM\PYGZus{}WORLD}\PYG{p}{);}
+	\PYG{n}{MPI\PYGZus{}Gather}\PYG{p}{(}\PYG{n}{pPartialVector}\PYG{p}{,} \PYG{n}{PartialSize}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}DOUBLE}\PYG{p}{,} \PYG{n}{pVector}\PYG{p}{,} \PYG{n}{PartialSize}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}DOUBLE}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}COMM\PYGZus{}WORLD}\PYG{p}{);}
+
+	\PYG{k}{if} \PYG{p}{(}\PYG{n}{ProcId} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+		\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZlt{}} \PYG{n}{Size} \PYG{o}{\PYGZpc{}} \PYG{n}{NProc}\PYG{p}{;} \PYG{o}{++}\PYG{n}{i}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+			\PYG{n}{MPI\PYGZus{}Recv}\PYG{p}{(}\PYG{n}{pMatrix} \PYG{o}{+} \PYG{n}{PartialSize} \PYG{o}{*} \PYG{n}{NProc} \PYG{o}{*} \PYG{n}{Size} \PYG{o}{+} \PYG{n}{i} \PYG{o}{*} \PYG{n}{Size}\PYG{p}{,} \PYG{n}{Size}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}DOUBLE}\PYG{p}{,} \PYG{n}{i} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}COMM\PYGZus{}WORLD}\PYG{p}{,} \PYG{o}{\PYGZam{}}\PYG{n}{st}\PYG{p}{);}
+			\PYG{n}{MPI\PYGZus{}Recv}\PYG{p}{(}\PYG{n}{pVector} \PYG{o}{+} \PYG{n}{PartialSize} \PYG{o}{*} \PYG{n}{NProc} \PYG{o}{+} \PYG{n}{i}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}DOUBLE}\PYG{p}{,} \PYG{n}{i} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}COMM\PYGZus{}WORLD}\PYG{p}{,} \PYG{o}{\PYGZam{}}\PYG{n}{st}\PYG{p}{);}
+		\PYG{p}{\PYGZcb{}}
+	\PYG{p}{\PYGZcb{}}
+	\PYG{k}{else} \PYG{k}{if} \PYG{p}{(}\PYG{n}{AdditionalSize}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+		\PYG{n}{MPI\PYGZus{}Send}\PYG{p}{(}\PYG{n}{pAdditionalMatrix}\PYG{p}{,} \PYG{n}{Size}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}DOUBLE}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}COMM\PYGZus{}WORLD}\PYG{p}{);}
+		\PYG{n}{MPI\PYGZus{}Send}\PYG{p}{(}\PYG{n}{pAdditionalVector}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}DOUBLE}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{MPI\PYGZus{}COMM\PYGZus{}WORLD}\PYG{p}{);}
+	\PYG{p}{\PYGZcb{}}
+
+	\PYG{c+cm}{/*if (ProcId == 0)}
+\PYG{c+cm}{		PrintMatrix(pMatrix, Size, Size);*/}
+
+	\PYG{c+c1}{// Back substitution}
+	\PYG{k}{if} \PYG{p}{(}\PYG{n}{ProcId} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{)}
+		\PYG{n}{ParallelBackSubstitution}\PYG{p}{(}\PYG{n}{pMatrix}\PYG{p}{,} \PYG{n}{pVector}\PYG{p}{,} \PYG{n}{pResult}\PYG{p}{,} \PYG{n}{Size}\PYG{p}{,} \PYG{n}{pPivotPos}\PYG{p}{);}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{c+c1}{// Function for testing the result}
+\PYG{k+kt}{void} \PYG{n+nf}{TestResult}\PYG{p}{(}\PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pMatrix}\PYG{p}{,} \PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pVector}\PYG{p}{,} \PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pResult}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{Size}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+	\PYG{c+cm}{/* Buffer for storing the vector, that is a result of multiplication}
+\PYG{c+cm}{	of the linear system matrix by the vector of unknowns */}
+	\PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pRightPartVector}\PYG{p}{;}
+
+	\PYG{c+c1}{// Flag, that shows wheather the right parts vectors are identical or not}
+	\PYG{k+kt}{int} \PYG{n}{equal} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+	\PYG{k+kt}{double} \PYG{n}{Accuracy} \PYG{o}{=} \PYG{l+m+mf}{1e\PYGZhy{}3}\PYG{p}{;} \PYG{c+c1}{// Comparison accuracy}
+	\PYG{n}{pRightPartVector} \PYG{o}{=} \PYG{k}{new} \PYG{k+kt}{double}\PYG{p}{[}\PYG{n}{Size}\PYG{p}{];}
+	\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZlt{}} \PYG{n}{Size}\PYG{p}{;} \PYG{o}{++}\PYG{n}{i}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+		\PYG{n}{pRightPartVector}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+		\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{j} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{j} \PYG{o}{\PYGZlt{}} \PYG{n}{Size}\PYG{p}{;} \PYG{o}{++}\PYG{n}{j}\PYG{p}{)}
+			\PYG{n}{pRightPartVector}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{+=} \PYG{n}{pMatrix}\PYG{p}{[}\PYG{n}{i} \PYG{o}{*} \PYG{n}{Size} \PYG{o}{+} \PYG{n}{j}\PYG{p}{]} \PYG{o}{*} \PYG{n}{pResult}\PYG{p}{[}\PYG{n}{j}\PYG{p}{];}
+	\PYG{p}{\PYGZcb{}}
+
+	\PYG{k}{for} \PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZlt{}} \PYG{n}{Size}\PYG{p}{;} \PYG{n}{i}\PYG{o}{++}\PYG{p}{)}
+		\PYG{k}{if} \PYG{p}{(}\PYG{n}{fabs}\PYG{p}{(}\PYG{n}{pRightPartVector}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{\PYGZhy{}} \PYG{n}{pVector}\PYG{p}{[}\PYG{n}{i}\PYG{p}{])} \PYG{o}{\PYGZgt{}} \PYG{n}{Accuracy}\PYG{p}{)}
+			\PYG{n}{equal} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{p}{;}
+
+	\PYG{k}{if} \PYG{p}{(}\PYG{n}{equal} \PYG{o}{==} \PYG{l+m+mi}{1}\PYG{p}{)}
+		\PYG{n}{printf}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{The result of the parallel Gauss algorithm is NOT correct. Check your code.\PYGZdq{}}\PYG{p}{);}
+	\PYG{k}{else}
+		\PYG{n}{printf}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{The result of the parallel Gauss algorithm is correct.\PYGZdq{}}\PYG{p}{);}
+
+	\PYG{k}{delete}\PYG{p}{[]} \PYG{n}{pRightPartVector}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{k+kt}{int} \PYG{n+nf}{main}\PYG{p}{()} \PYG{p}{\PYGZob{}}
+	\PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pMatrix}\PYG{p}{;} \PYG{c+c1}{// The matrix of the linear system}
+	\PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pVector}\PYG{p}{;} \PYG{c+c1}{// The right parts of the linear system}
+	\PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pResult}\PYG{p}{;} \PYG{c+c1}{// The result vector}
+	\PYG{k+kt}{int} \PYG{n}{Size}\PYG{p}{;} \PYG{c+c1}{// The sizes of the initial matrix and the vector}
+	\PYG{k+kt}{double} \PYG{n}{start}\PYG{p}{,} \PYG{n}{finish}\PYG{p}{,} \PYG{n}{duration}\PYG{p}{;}
+
+	\PYG{k+kt}{int} \PYG{n}{PartialSize}\PYG{p}{;}
+	\PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pPartialMatrix}\PYG{p}{;}
+	\PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pPartialVector}\PYG{p}{;}
+
+	\PYG{k+kt}{int} \PYG{n}{AdditionalSize}\PYG{p}{;}
+	\PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pAdditionalMatrix}\PYG{p}{;}
+	\PYG{k+kt}{double}\PYG{o}{*} \PYG{n}{pAdditionalVector}\PYG{p}{;}
+
+	\PYG{k+kt}{int}\PYG{o}{*} \PYG{n}{pPivotPos}\PYG{p}{;} \PYG{c+c1}{// The Number of pivot rows selected at the iterations}
+	\PYG{k+kt}{int}\PYG{o}{*} \PYG{n}{pPivotIter}\PYG{p}{;} \PYG{c+c1}{// The Iterations, at which the rows were pivots}
+
+	\PYG{n}{MPI\PYGZus{}Init}\PYG{p}{(}\PYG{n+nb}{NULL}\PYG{p}{,} \PYG{n+nb}{NULL}\PYG{p}{);}
+	\PYG{n}{MPI\PYGZus{}Comm\PYGZus{}size}\PYG{p}{(}\PYG{n}{MPI\PYGZus{}COMM\PYGZus{}WORLD}\PYG{p}{,} \PYG{o}{\PYGZam{}}\PYG{n}{NProc}\PYG{p}{);}
+	\PYG{n}{MPI\PYGZus{}Comm\PYGZus{}rank}\PYG{p}{(}\PYG{n}{MPI\PYGZus{}COMM\PYGZus{}WORLD}\PYG{p}{,} \PYG{o}{\PYGZam{}}\PYG{n}{ProcId}\PYG{p}{);}
+
+	\PYG{k}{if} \PYG{p}{(}\PYG{n}{ProcId} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{)}
+		\PYG{n}{printf}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Parallel Gauss algorithm for solving linear systems}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{);}
+
+	\PYG{n}{MPI\PYGZus{}Barrier}\PYG{p}{(}\PYG{n}{MPI\PYGZus{}COMM\PYGZus{}WORLD}\PYG{p}{);}
+	\PYG{c+c1}{// Memory allocation and definition of objects\PYGZsq{} elements}
+	\PYG{n}{ProcessInitialization}\PYG{p}{(}\PYG{n}{pMatrix}\PYG{p}{,} \PYG{n}{pVector}\PYG{p}{,} \PYG{n}{pResult}\PYG{p}{,}
+		\PYG{n}{pPartialMatrix}\PYG{p}{,} \PYG{n}{pPartialVector}\PYG{p}{,} \PYG{n}{Size}\PYG{p}{,} \PYG{n}{PartialSize}\PYG{p}{,}
+		\PYG{n}{AdditionalSize}\PYG{p}{,} \PYG{n}{pAdditionalMatrix}\PYG{p}{,} \PYG{n}{pAdditionalVector}\PYG{p}{);}
+
+	\PYG{c+c1}{//if (ProcId == 0) \PYGZob{}}
+	\PYG{c+c1}{//	// The matrix and the vector output}
+	\PYG{c+c1}{//	printf(\PYGZdq{}Initial Matrix \PYGZbs{}n\PYGZdq{});}
+	\PYG{c+c1}{//	PrintMatrix(pMatrix, Size, Size);}
+	\PYG{c+c1}{//	printf(\PYGZdq{}Initial Vector \PYGZbs{}n\PYGZdq{});}
+	\PYG{c+c1}{//	PrintVector(pVector, Size);}
+	\PYG{c+c1}{//\PYGZcb{}}
+
+	\PYG{c+c1}{// Execution of Gauss algorithm}
+	\PYG{n}{start} \PYG{o}{=} \PYG{n}{clock}\PYG{p}{();}
+	\PYG{n}{ParallelResultCalculation}\PYG{p}{(}\PYG{n}{pMatrix}\PYG{p}{,} \PYG{n}{pVector}\PYG{p}{,} \PYG{n}{pResult}\PYG{p}{,} \PYG{n}{Size}\PYG{p}{,}
+		\PYG{n}{pPartialMatrix}\PYG{p}{,} \PYG{n}{pPartialVector}\PYG{p}{,} \PYG{n}{PartialSize}\PYG{p}{,}
+		\PYG{n}{pAdditionalMatrix}\PYG{p}{,} \PYG{n}{pAdditionalVector}\PYG{p}{,} \PYG{n}{AdditionalSize}\PYG{p}{,} \PYG{n}{pPivotPos}\PYG{p}{,} \PYG{n}{pPivotIter}\PYG{p}{);}
+	\PYG{n}{finish} \PYG{o}{=} \PYG{n}{clock}\PYG{p}{();}
+	\PYG{n}{duration} \PYG{o}{=} \PYG{p}{(}\PYG{n}{finish} \PYG{o}{\PYGZhy{}} \PYG{n}{start}\PYG{p}{)} \PYG{o}{/} \PYG{n}{CLOCKS\PYGZus{}PER\PYGZus{}SEC}\PYG{p}{;}
+
+	\PYG{n}{MPI\PYGZus{}Barrier}\PYG{p}{(}\PYG{n}{MPI\PYGZus{}COMM\PYGZus{}WORLD}\PYG{p}{);}
+	\PYG{k}{if} \PYG{p}{(}\PYG{n}{ProcId} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+		\PYG{c+c1}{// Testing the result}
+		\PYG{n}{TestResult}\PYG{p}{(}\PYG{n}{pMatrix}\PYG{p}{,} \PYG{n}{pVector}\PYG{p}{,} \PYG{n}{pResult}\PYG{p}{,} \PYG{n}{Size}\PYG{p}{);}
+
+		\PYG{c+c1}{// Printing the result vector}
+		\PYG{n}{printf}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{Result Vector: }\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{);}
+		\PYG{n}{PrintVector}\PYG{p}{(}\PYG{n}{pResult}\PYG{p}{,} \PYG{n}{Size}\PYG{p}{);}
+
+		\PYG{c+c1}{// Printing the execution time of Gauss method}
+		\PYG{n}{printf}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{Time of execution: \PYGZpc{}f}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{duration}\PYG{p}{);}
+	\PYG{p}{\PYGZcb{}}
+
+	\PYG{n}{MPI\PYGZus{}Finalize}\PYG{p}{();}
+
+	\PYG{k}{return} \PYG{l+m+mi}{0}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+\end{Verbatim}

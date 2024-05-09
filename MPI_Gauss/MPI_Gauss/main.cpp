@@ -64,7 +64,7 @@ void ProcessInitialization(double*& pMatrix, double*& pVector, double*& pResult,
 	int& AdditionalSize, double*& pAdditionalMatrix, double*& pAdditionalVector) {
 	MPI_Barrier(MPI_COMM_WORLD);
 
-	Size = 3000;
+	Size = 5;
 
 	// Memory allocation
 	pMatrix = new double[Size * Size];
@@ -86,8 +86,8 @@ void ProcessInitialization(double*& pMatrix, double*& pVector, double*& pResult,
 	if (ProcId == 0) {
 		// Initialization of the matrix and the vector elements
 		//DummyDataInitialization(pMatrix, pVector, Size);
-		RandomDataInitialization(pMatrix, pVector, Size);
-		//MyDataInitialization(pMatrix, pVector, Size);
+		//RandomDataInitialization(pMatrix, pVector, Size);
+		MyDataInitialization(pMatrix, pVector, Size);
 	}
 	
 	MPI_Scatter(pMatrix, Size * PartialSize, MPI_DOUBLE, pPartialMatrix, Size * PartialSize, MPI_DOUBLE, 0, MPI_COMM_WORLD);
@@ -357,9 +357,9 @@ int main() {
 		// Testing the result
 		TestResult(pMatrix, pVector, pResult, Size);
 
-		//// Printing the result vector
-		//printf("\nResult Vector: \n");
-		//PrintVector(pResult, Size);
+		// Printing the result vector
+		printf("\nResult Vector: \n");
+		PrintVector(pResult, Size);
 
 		// Printing the execution time of Gauss method
 		printf("\nTime of execution: %f\n", duration);

@@ -1,0 +1,617 @@
+\documentclass[bachelor, och, referat]{SCWorks}
+
+\usepackage[T2A]{fontenc}
+\usepackage[cp1251]{inputenc}
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage[sort,compress]{cite}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{fancyvrb}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage[english,russian]{babel}
+\usepackage{tempora}
+\usepackage{minted}
+\usepackage{import}
+\graphicspath{ {./images/} }
+%\definecolor{codebg}{rgb}{0.9,0.9,0.9} %описание собственного цвета (почти
+%белый) \setminted{         % установка параметров по умолчанию для команд
+%бибилиотеки minted bgcolor=codebg, % установка цвета фона программного кода
+%linenos=true,   % включение номеров строк в листингах numbersep=5pt,  %
+%промежуток между номерами строк и началом строк листинга breaklines}     %
+%автоматические переносы строк (когда строки не умещаются)
+
+\usemintedstyle{bw} % включение черно-белого стиля программного кода
+	
+
+\usepackage[hidelinks]{hyperref}
+
+\setminted{
+	style=bw,
+	framesep=2mm, 
+	baselinestretch=1.2, 
+	fontsize=\footnotesize, 
+	linenos,
+	breaklines=true
+}
+
+\newcommand{\eqdef}{\stackrel {\rm def}{=}}
+
+\newtheorem{lem}{Лемма}
+
+\begin{document}
+
+% Кафедра (в родительном падеже)
+\chair{математической кибернетики и компьютерных наук}
+
+% Тема работы
+\title{Численное решение систем линейных алгебраических уравнений методом исключения Гаусса и итерационными методами}
+
+% Курс
+\course{3}
+
+% Группа
+\group{311}
+
+% Факультет (в родительном падеже) (по умолчанию "факультета КНиИТ")
+%\department{факультета КНиИТ}
+
+% Специальность/направление код - наименование
+\napravlenie{02.03.02 "--- Фундаментальная информатика и информационные технологии}
+
+% Для студентки. Для работы студента следующая команда не нужна.
+\studenttitle{Студента}
+
+% Фамилия, имя, отчество в родительном падеже
+\author{Аношкина Андрея Алексеевича}
+
+% Заведующий кафедрой
+\chtitle{к.\,ф.-м.\,н., доцент} % степень, звание
+\chname{С.\,В.\,Миронов}
+
+%Научный руководитель (для реферата преподаватель проверяющий работу)
+%!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+\satitle{Старший преподаватель} %должность, степень, звание
+\saname{М.\,С.\,Портенко}
+
+% Руководитель практики от организации (только для практики, для остальных типов
+% работ не используется)
+\patitle{к.\,ф.-м.\,н., доцент}
+\paname{Д.\,Ю.\,Петров}
+
+% Семестр (только для практики, для остальных типов работ не используется)
+\term{6}
+
+% Наименование практики (только для практики, для остальных типов работ не
+% используется)
+\practtype{учебная}
+
+% Продолжительность практики (количество недель) (только для практики, для
+% остальных типов работ не используется)
+\duration{2}
+
+% Даты начала и окончания практики (только для практики, для остальных типов
+% работ не используется)
+\practStart{01.07.2016} \practFinish{14.07.2016}
+
+% Год выполнения отчета
+\date{2024}
+
+\maketitle
+
+\tableofcontents
+
+\section{Work 14}
+
+\subsection*{Задание}
+
+Аналогично работе с OMP выполните следующее задание через MPI.
+
+Решите систему линейных уравнений согласно варианту параллельным методом Гаусса.
+
+\begin{equation*}
+\begin{cases}
+x_1 + x_2 + 4x_3 + 4x_4 + 9x_5 + 9 = 0\\
+2x_1 + 2x_2 + 17x_3 + 17x_4 + 82x_5 + 146 = 0\\
+2x_1 + 3x_3 - x_4 + 4x_5 + 10 = 0\\
+x_2 + 4x_3 + 12x_4 + 27x_5 + 26 = 0\\
+x_1 + 2x_2 + 2x_3 + 10x_4 -37 = 0
+\end{cases}
+\end{equation*}
+
+\subsection*{Определение задачи решения системы линейных уравнений}
+
+Множество $n$ линейных уравнений:
+
+\begin{equation*}
+\begin{cases}
+a_{11}x_1 + a_{12}x_2 + \dots + a_{1n}x_n = b_1\\
+a_{21}x_1 + a_{22}x_2 + \dots + a_{2n}x_n = b_2\\
+\dots\\
+a_{n1}x_1 + a_{n2}x_2 + \dots + a_{nn}x_n = b_n\\
+\end{cases}
+\end{equation*}
+
+называется системой линейных уравнений или линейной системой.
+
+В более кратком (матричном) виде система может быть представлена как $Ax = b$, где $A = (a_{ij})$ есть вещественная матрица размера $n\times n$, а вектора
+$b$ и $x$ состоят из элементов.
+
+Под задачей решения системы линейных уравнений для заданных
+матрицы $A$ и вектора $b$ обычно понимается нахождение значения вектора
+неизвестных $x$, при котором выполняются все уравнения системы.
+
+\subsection*{Метод Гаусса}
+
+\begin{itemize}
+\item Основная идея: приведение матрицы $A$ к верхнему треугольному виду с
+помощью эквивалентных преобразований.
+\item Эквивалентные преобразования:
+\begin{itemize}
+\item умножение уравнения на ненулевую константу;
+\item перестановка уравнений;
+\item суммирование уравнения с любым другим уравнением системы.
+\end{itemize}
+\end{itemize}
+
+Метод Гаусса включает последовательное выполнение двух этапов. На
+первом этапе "--- прямой ход метода Гаусса "--- исходная система линейных
+уравнений при помощи последовательного исключения неизвестных
+приводится к верхнему треугольному виду.
+
+На обратном ходе метода Гаусса (второй этап алгоритма) осуществляется
+определение значений неизвестных. Из последнего уравнения
+преобразованной системы может быть вычислено значение переменной ,
+после этого из предпоследнего уравнения становится возможным
+определение переменной $x_{n-1}$ и т.\,д.
+
+\subsection*{Прямой ход метода Гаусса}
+
+\begin{itemize}
+\item На итерации $i$, $0 \leq i < n$, метода производится исключение неизвестной $i$
+ для всех уравнений с номерами $k$, больших $i$
+($i \leq k < n$). Для этого из этих уравнений осуществляется вычитание
+строки $i$, умноженной на константу $(a_{ki}/a_{ii})$, чтобы результирующий
+коэффициент при неизвестной $x_i$ в строках оказался нулевым.
+
+\item Все необходимые вычисления определяются при помощи соотношений:
+
+\begin{equation*}
+\begin{cases}
+a'_{kj} = a_{kj} - (a_{ki}/a_{ii}) \dot a_{ij}\\
+b'_k = b_k - (a_{ki}/a_{ii}) \dot b_i\\
+i \leq j < n, i < k \leq n, o \leq i < n
+\end{cases}
+\end{equation*}
+\end{itemize}
+
+\subsection*{Обратный ход метода Гаусса}
+
+После приведения матрицы коэффициентов к треугольному виду
+становится возможным определение значений неизвестных:
+
+\begin{itemize}
+\item Из последнего уравнения преобразованной системы может быть
+вычислено значение переменной $x_n$.
+\item Из предпоследнего уравнения становится возможным определение
+переменной $x_{n-1}$, и т.\,д.
+\end{itemize}
+
+В общем виде, выполняемые вычисления при обратном ходе метода Гаусса
+могут быть представлены при помощи соотношений:
+
+\begin{equation*}
+\begin{cases}
+x_n = b_n / a_{nn},\\
+x_i = (b_i - \sum_{j = i + 1}^{n}a_{ij}x_j) / a_{ii}, i = n - 1, n - 2, \dots, 0.
+\end{cases}
+\end{equation*}
+
+\subsection*{Выбор ведущего элемента}
+
+Описанный алгоритм применим, только если ведущие элементы отличны от
+нуля, т.\,е. $a_{ii} \neq 0$.
+
+\begin{itemize}
+\item Рассмотрим $k$"=й шаг алгоритма. Пусть $s = max{|a_{kk}|, |a_{k+1 k}|, \dots, |a_{nk}|}$
+\item Тогда переставим $s$"=ю и $k$"=ю строки матрицы (выбор ведущего элемента по столбцу).
+\item В итоге получаем систему $PAx = Pb$, где $P$ "--- матрица перестановки.
+\end{itemize}
+
+\subsection*{Параллельная реализация}
+
+Фрагмент кода решения приведен ниже:
+
+\begin{minted}{cpp}
+// SerialGauss.cpp
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <time.h>
+#include <math.h>
+#include "mpi.h"
+#include <iostream>
+
+int NProc, ProcId;
+MPI_Status st;
+
+// Function for formatted matrix output
+void PrintMatrix(double* pMatrix, int RowCount, int ColCount) {
+	for (int i = 0; i < RowCount; ++i) {
+		for (int j = 0; j < ColCount; ++j)
+			printf("%7.4f ", pMatrix[i * RowCount + j]);
+		printf("\n");
+	}
+}
+
+// Function for formatted vector output
+void PrintVector(double* pVector, int Size) {
+	for (int i = 0; i < Size; ++i)
+		printf("%7.4f ", pVector[i]);
+}
+
+
+// Function for simple initialization of the matrix
+// and the vector elements
+void DummyDataInitialization(double* pMatrix, double* pVector, int Size) {
+	for (int i = 0; i < Size; ++i) {
+		pVector[i] = i + 1.0;
+		for (int j = 0; j < Size; ++j)
+			if (j <= i)
+				pMatrix[i * Size + j] = 1;
+			else
+				pMatrix[i * Size + j] = 0;
+	}
+}
+
+// Function for random initialization of the matrix
+// and the vector elements
+void RandomDataInitialization(double* pMatrix, double* pVector, int Size) {
+	srand(unsigned(clock()));
+	for (int i = 0; i < Size; ++i) {
+		pVector[i] = rand() / double(1000);
+		for (int j = 0; j < Size; ++j)
+			pMatrix[i * Size + j] = rand() / double(1000);
+	}
+}
+
+void MyDataInitialization(double* pMatrix, double* pVector, int Size) {
+	pMatrix[0] = 1; pMatrix[1] = 1; pMatrix[2] = 4; pMatrix[3] = 4; pMatrix[4] = 9; pVector[0] = -9;
+	pMatrix[5] = 2; pMatrix[6] = 2; pMatrix[7] = 17; pMatrix[8] = 17; pMatrix[9] = 82; pVector[1] = -146;
+	pMatrix[10] = 2; pMatrix[11] = 0; pMatrix[12] = 3; pMatrix[13] = -1; pMatrix[14] = 4; pVector[2] = -10;
+	pMatrix[15] = 0; pMatrix[16] = 1; pMatrix[17] = 4; pMatrix[18] = 12; pMatrix[19] = 27; pVector[3] = -26;
+	pMatrix[20] = 1; pMatrix[21] = 2; pMatrix[22] = 2; pMatrix[23] = 10; pMatrix[24] = 0; pVector[4] = 37;
+}
+
+// Function for memory allocation and definition of the objectselements 
+void ProcessInitialization(double*& pMatrix, double*& pVector, double*& pResult, 
+	double*& pPartialMatrix, double*& pPartialVector, int& Size, int& PartialSize, 
+	int& AdditionalSize, double*& pAdditionalMatrix, double*& pAdditionalVector) {
+	MPI_Barrier(MPI_COMM_WORLD);
+
+	Size = 5;
+
+	// Memory allocation
+	pMatrix = new double[Size * Size];
+	pVector = new double[Size];
+	pResult = new double[Size];
+
+	PartialSize = Size / NProc;
+
+	// Partial arrays memory allocation
+	pPartialMatrix = new double[Size * PartialSize];
+	pPartialVector = new double[PartialSize];
+
+	AdditionalSize = ((ProcId > 0) && (ProcId <= (Size % NProc)) && ((Size % NProc) > 0));
+
+	// Additional arrays memory allocation
+	pAdditionalMatrix = new double[Size * AdditionalSize];
+	pAdditionalVector = new double[AdditionalSize];
+
+	if (ProcId == 0) {
+		// Initialization of the matrix and the vector elements
+		//DummyDataInitialization(pMatrix, pVector, Size);
+		//RandomDataInitialization(pMatrix, pVector, Size);
+		MyDataInitialization(pMatrix, pVector, Size);
+	}
+	
+	MPI_Scatter(pMatrix, Size * PartialSize, MPI_DOUBLE, pPartialMatrix, Size * PartialSize, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Scatter(pVector, PartialSize, MPI_DOUBLE, pPartialVector, PartialSize, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+	if (Size % NProc) {
+		if (ProcId == 0)
+			for (int i = 0; i < Size % NProc; ++i) {
+				MPI_Send(pMatrix + Size * (PartialSize * NProc + i), Size, MPI_DOUBLE, i + 1, 0, MPI_COMM_WORLD);
+				MPI_Send(pVector + (PartialSize * NProc + i), 1, MPI_DOUBLE, i + 1, 0, MPI_COMM_WORLD);
+			}
+		else if (AdditionalSize) {
+			MPI_Recv(pAdditionalMatrix, Size, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, &st);
+			MPI_Recv(pAdditionalVector, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, &st);
+		}
+	}
+}
+
+// Finding the pivot row
+int ParallelFindPivotRow(double* pPartialMatrix, int PartialSize, double* pAdditionalMatrix, int AdditionalSize, int Iter, int* pPivotIter, int Size) {
+	MPI_Barrier(MPI_COMM_WORLD);
+	int PivotRow = -1; // The index of the pivot row
+	int MaxValue = 0; // The value of the pivot element
+
+	for (int i = 0; i < PartialSize; ++i) {
+		if ((pPivotIter[i + PartialSize * ProcId] == -1) && (fabs(pPartialMatrix[i * Size + Iter]) >= MaxValue)) {
+			PivotRow = i + PartialSize * ProcId;
+			MaxValue = fabs(pPartialMatrix[i * Size + Iter]);
+		}
+	}
+
+	if (AdditionalSize) {
+		if (pPivotIter[PartialSize * NProc + ProcId - 1] == -1 && fabs(pAdditionalMatrix[Iter]) >= MaxValue) {
+			PivotRow = PartialSize * NProc + ProcId - 1;
+			MaxValue = fabs(pAdditionalMatrix[Iter]);
+		}
+	}
+
+	if (ProcId != 0) {
+		MPI_Send(&MaxValue, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+		MPI_Send(&PivotRow, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+	}
+	else {
+		for (int i = 1; i < NProc; ++i) {
+			int TMaxValue, TPivotRow;
+			MPI_Recv(&TMaxValue, 1, MPI_INT, i, 0, MPI_COMM_WORLD, &st);
+			MPI_Recv(&TPivotRow, 1, MPI_INT, i, 0, MPI_COMM_WORLD, &st);
+			if (TMaxValue > MaxValue) {
+				MaxValue = TMaxValue;
+				PivotRow = TPivotRow;
+			}
+		}
+	}
+
+	MPI_Bcast(&PivotRow, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+	return PivotRow;
+}
+
+// Column elimination
+void ParallelColumnElimination(double* pPartialMatrix, double* pPartialVector, double* pAdditionalMatrix, double* pAdditionalVector, int Pivot, int Iter, int Size, int PartialSize, int AdditionalSize, int* pPivotIter) {
+	MPI_Barrier(MPI_COMM_WORLD);
+	double PivotValue, PivotFactor;
+	double* PivotRow = new double[Size - Iter];
+
+	if (Pivot <= NProc * PartialSize - 1) {
+		if (Pivot >= ProcId * PartialSize && Pivot < (ProcId + 1) * PartialSize) {
+			PivotValue = pPartialVector[(Pivot - ProcId * PartialSize)];
+			for (int i = 0; i < Size - Iter; ++i)
+				PivotRow[i] = pPartialMatrix[(Pivot - ProcId * PartialSize) * Size + Iter + i];
+			for (int i = 0; i < NProc; ++i)
+				if (i != ProcId) {
+					MPI_Send(PivotRow, Size - Iter, MPI_DOUBLE, i, 0, MPI_COMM_WORLD);
+					MPI_Send(&PivotValue, 1, MPI_DOUBLE, i, 1, MPI_COMM_WORLD);
+				}
+		}
+		else {
+			MPI_Recv(PivotRow, Size - Iter, MPI_DOUBLE, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &st);
+			MPI_Recv(&PivotValue, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 1, MPI_COMM_WORLD, &st);
+		}
+	}
+	else
+		if (Pivot == NProc * PartialSize + ProcId - 1) {
+			PivotValue = pAdditionalVector[0];
+			for (int i = 0; i < Size - Iter; ++i)
+				PivotRow[i] = pAdditionalMatrix[Iter + i];
+			for (int i = 0; i < NProc; ++i)
+				if (i != ProcId) {
+					MPI_Send(PivotRow, Size - Iter, MPI_DOUBLE, i, 0, MPI_COMM_WORLD);
+					MPI_Send(&PivotValue, 1, MPI_DOUBLE, i, 1, MPI_COMM_WORLD);
+				}
+		}
+		else {
+			MPI_Recv(PivotRow, Size - Iter, MPI_DOUBLE, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &st);
+			MPI_Recv(&PivotValue, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 1, MPI_COMM_WORLD, &st);
+		}
+
+	for (int i = 0; i < PartialSize; ++i) {
+		if (pPivotIter[i + PartialSize * ProcId] == -1) {
+			PivotFactor = pPartialMatrix[i * Size + Iter] / PivotRow[0];
+			for (int j = Iter; j < Size; ++j)
+				pPartialMatrix[i * Size + j] -= PivotFactor * PivotRow[j - Iter];
+			pPartialVector[i] -= PivotFactor * PivotValue;
+		}
+	}
+
+	if (AdditionalSize) {
+		if (pPivotIter[NProc * PartialSize + ProcId - 1] == -1) {
+			PivotFactor = pAdditionalMatrix[Iter] / PivotRow[0];
+			for (int j = Iter; j < Size; ++j)
+				pAdditionalMatrix[j] -= PivotFactor * PivotRow[j - Iter];
+			pAdditionalVector[0] -= PivotFactor * PivotValue;
+		}
+	}
+}
+
+// Gaussian elimination
+void ParallelGaussianElimination(double* pPartialMatrix, double* pPartialVector, int PartialSize,
+	double* pAdditionalMatrix, double* pAdditionalVector, int AdditionalSize, int Size, int* pPivotPos, int* pPivotIter) {
+	//MPI_Barrier(MPI_COMM_WORLD);
+	int PivotRow; // The number of the current pivot row
+	for (int Iter = 0; Iter < Size; ++Iter) {
+		// Finding the pivot row
+		PivotRow = ParallelFindPivotRow(pPartialMatrix, PartialSize, pAdditionalMatrix, AdditionalSize, Iter, pPivotIter, Size);
+		pPivotPos[Iter] = PivotRow;
+		pPivotIter[PivotRow] = Iter;
+
+		/*if (ProcId == 0) {
+			for (int i = 0; i < Size; ++i)
+				std::cout << pPivotPos[i] << " ";
+			std::cout << "\n";
+		}*/
+
+		ParallelColumnElimination(pPartialMatrix, pPartialVector, pAdditionalMatrix, pAdditionalVector, PivotRow, Iter, Size, PartialSize, AdditionalSize, pPivotIter);
+	}
+}
+
+// Back substution
+void ParallelBackSubstitution(double* pMatrix, double* pVector, double* pResult, int Size, int* pPivotPos) {
+	int RowIndex, Row;
+	for (int i = Size - 1; i >= 0; --i) {
+		RowIndex = pPivotPos[i];
+		pResult[i] = pVector[RowIndex] / pMatrix[Size * RowIndex + i];
+		for (int j = 0; j < i; ++j) {
+			Row = pPivotPos[j];
+			pVector[Row] -= pMatrix[Row * Size + i] * pResult[i];
+			pMatrix[Row * Size + i] = 0;
+		}
+	}
+}
+
+// Function for the execution of Gauss algorithm
+void ParallelResultCalculation(double* pMatrix, double* pVector, double* pResult, int Size,
+	double* pPartialMatrix, double* pPartialVector, int PartialSize,
+	double* pAdditionalMatrix, double* pAdditionalVector, int AdditionalSize, int*& pPivotPos, int*& pPivotIter) {
+	MPI_Barrier(MPI_COMM_WORLD);
+	// Memory allocation
+	pPivotPos = new int[Size];
+	pPivotIter = new int[Size];
+
+	for (int i = 0; i < Size; pPivotIter[i] = -1, ++i);
+
+	// Gaussian elimination
+	ParallelGaussianElimination(pPartialMatrix, pPartialVector, PartialSize, pAdditionalMatrix, pAdditionalVector, AdditionalSize, Size, pPivotPos, pPivotIter);
+
+	MPI_Barrier(MPI_COMM_WORLD);
+
+	MPI_Gather(pPartialMatrix, Size * PartialSize, MPI_DOUBLE, pMatrix, Size * PartialSize, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Gather(pPartialVector, PartialSize, MPI_DOUBLE, pVector, PartialSize, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+	if (ProcId == 0) {
+		for (int i = 0; i < Size % NProc; ++i) {
+			MPI_Recv(pMatrix + PartialSize * NProc * Size + i * Size, Size, MPI_DOUBLE, i + 1, 0, MPI_COMM_WORLD, &st);
+			MPI_Recv(pVector + PartialSize * NProc + i, 1, MPI_DOUBLE, i + 1, 0, MPI_COMM_WORLD, &st);
+		}
+	}
+	else if (AdditionalSize) {
+		MPI_Send(pAdditionalMatrix, Size, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+		MPI_Send(pAdditionalVector, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+	}
+
+	/*if (ProcId == 0)
+		PrintMatrix(pMatrix, Size, Size);*/
+
+	// Back substitution
+	if (ProcId == 0)
+		ParallelBackSubstitution(pMatrix, pVector, pResult, Size, pPivotPos);
+}
+
+// Function for testing the result
+void TestResult(double* pMatrix, double* pVector, double* pResult, int Size) {
+	/* Buffer for storing the vector, that is a result of multiplication
+	of the linear system matrix by the vector of unknowns */
+	double* pRightPartVector;
+
+	// Flag, that shows wheather the right parts vectors are identical or not
+	int equal = 0;
+	double Accuracy = 1e-3; // Comparison accuracy
+	pRightPartVector = new double[Size];
+	for (int i = 0; i < Size; ++i) {
+		pRightPartVector[i] = 0;
+		for (int j = 0; j < Size; ++j)
+			pRightPartVector[i] += pMatrix[i * Size + j] * pResult[j];
+	}
+
+	for (int i = 0; i < Size; i++)
+		if (fabs(pRightPartVector[i] - pVector[i]) > Accuracy)
+			equal = 1;
+
+	if (equal == 1)
+		printf("\nThe result of the parallel Gauss algorithm is NOT correct. Check your code.");
+	else
+		printf("\nThe result of the parallel Gauss algorithm is correct.");
+
+	delete[] pRightPartVector;
+}
+
+int main() {
+	double* pMatrix; // The matrix of the linear system
+	double* pVector; // The right parts of the linear system
+	double* pResult; // The result vector
+	int Size; // The sizes of the initial matrix and the vector
+	double start, finish, duration;
+
+	int PartialSize;
+	double* pPartialMatrix;
+	double* pPartialVector;
+
+	int AdditionalSize;
+	double* pAdditionalMatrix;
+	double* pAdditionalVector;
+
+	int* pPivotPos; // The Number of pivot rows selected at the iterations
+	int* pPivotIter; // The Iterations, at which the rows were pivots
+
+	MPI_Init(NULL, NULL);
+	MPI_Comm_size(MPI_COMM_WORLD, &NProc);
+	MPI_Comm_rank(MPI_COMM_WORLD, &ProcId);
+
+	if (ProcId == 0)
+		printf("Parallel Gauss algorithm for solving linear systems\n");
+
+	MPI_Barrier(MPI_COMM_WORLD);
+	// Memory allocation and definition of objects' elements
+	ProcessInitialization(pMatrix, pVector, pResult, 
+		pPartialMatrix, pPartialVector, Size, PartialSize, 
+		AdditionalSize, pAdditionalMatrix, pAdditionalVector);
+
+	//if (ProcId == 0) {
+	//	// The matrix and the vector output
+	//	printf("Initial Matrix \n");
+	//	PrintMatrix(pMatrix, Size, Size);
+	//	printf("Initial Vector \n");
+	//	PrintVector(pVector, Size);
+	//}
+
+	// Execution of Gauss algorithm
+	start = clock();
+	ParallelResultCalculation(pMatrix, pVector, pResult, Size,
+		pPartialMatrix, pPartialVector, PartialSize,
+		pAdditionalMatrix, pAdditionalVector, AdditionalSize, pPivotPos, pPivotIter);
+	finish = clock();
+	duration = (finish - start) / CLOCKS_PER_SEC;
+
+	MPI_Barrier(MPI_COMM_WORLD);
+	if (ProcId == 0) {
+		// Testing the result
+		TestResult(pMatrix, pVector, pResult, Size);
+
+		// Printing the result vector
+		printf("\nResult Vector: \n");
+		PrintVector(pResult, Size);
+
+		// Printing the execution time of Gauss method
+		printf("\nTime of execution: %f\n", duration);
+	}
+
+	MPI_Finalize();
+
+	return 0;
+}
+\end{minted}
+
+\subsection*{Результат работы}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth]{work-14.png}
+	\caption{Work"=14}
+\end{figure}
+
+\subsection*{Характеристики устройства}
+
+Процессор: Intel(R) Core(TM) i5"=10400F
+
+Ядер: 6
+
+Оперативная память: 16 Гб
+
+\end{document}
