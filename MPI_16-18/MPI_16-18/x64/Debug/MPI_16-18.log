@@ -1,2 +1,3 @@
 ﻿  main.cpp
+C:\Users\PC\Desktop\University\ParallelProgramming\MPI_16-18\MPI_16-18\main.cpp(219,11): warning C4477: "printf": в строке форматирования "%d" требуется аргумент типа "int", но вариативный аргумент "1" имеет тип "double"
   MPI_16-18.vcxproj -> C:\Users\PC\Desktop\University\ParallelProgramming\MPI_16-18\x64\Debug\MPI_16-18.exe

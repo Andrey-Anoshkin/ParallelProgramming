@@ -12,6 +12,59 @@ using namespace std;
 
 int ProcId, NProc;
 MPI_Status st;
+int task = 1;
+
+void BitReversing(complex<double>* inputSignal, complex<double>* outputSignal, int size) {
+	int bitsCount = 0;
+	//bitsCount = log2(size)
+	for (int tmp_size = size; tmp_size > 1; tmp_size /= 2, bitsCount++);
+
+	//ind - index in input array
+	//revInd - correspondent to ind index in output array
+
+	for (int ind = 0; ind < size; ind++) {
+		int mask = 1 << (bitsCount - 1);
+		int revInd = 0;
+		for (int i = 0; i < bitsCount; i++) {
+			bool val = ind & mask;
+			revInd |= val << i;
+			mask = mask >> 1;
+		}
+		outputSignal[revInd] = inputSignal[ind];
+	}
+}
+
+__inline void Butterfly(complex<double>* signal, complex<double> u, int offset, int butterflySize) {
+	complex<double> tem = signal[offset + butterflySize] * u;
+	signal[offset + butterflySize] = signal[offset] - tem;
+	signal[offset] += tem;
+}
+
+void SerialFFTCalculation(complex<double>* signal, int size) {
+	int m = 0;
+	for (int tmp_size = size; tmp_size > 1; tmp_size /= 2, m++);
+	for (int p = 0; p < m; p++) {
+		int butterflyOffset = 1 << (p + 1);
+		int butterflySize = butterflyOffset >> 1;
+		double coeff = PI / butterflySize;
+		for (int i = 0; i < size / butterflyOffset; i++)
+			for (int j = 0; j < butterflySize; j++)
+				Butterfly(signal, complex<double>(cos(-j * coeff),
+					sin(-j * coeff)), j + i * butterflyOffset, butterflySize);
+	}
+}
+
+// FFT computation
+void SerialFFT(complex<double>* inputSignal, complex<double>* outputSignal, int size) {
+	BitReversing(inputSignal, outputSignal, size);
+	SerialFFTCalculation(outputSignal, size);
+}
+
+void PrintSignal(complex<double>* signal, int size) {
+	cout << "Result signal" << endl;
+	for (int i = 0; i < size; i++)
+		cout << signal[i] << endl;
+}
 
 //Function for simple initialization of input signal elements
 void DummyDataInitialization(complex<double>* input, int size) {
@@ -28,7 +81,6 @@ void RandomDataInitialization(complex<double>* input, int size) {
 }
 
 void MyDataInitialization(complex<double>* input, int size) {
-	int task = 2;
 	int partialSize = size / NProc;
 	complex<double>* partialInput = new complex<double>[partialSize];
 
@@ -56,9 +108,10 @@ void MyDataInitialization(complex<double>* input, int size) {
 //Function for memory allocation and data initialization
 void ProcessInitialization(complex<double>*& inputSignal, complex<double>*& outputSignal, int& size) {
 
-	size = 32;
+	size = 128;
 
-	cout << "Input signal length = " << size << endl;
+	if (!ProcId)
+		cout << "Input signal length = " << size << endl;
 	inputSignal = new complex<double>[size];
 	outputSignal = new complex<double>[size];
 
@@ -69,26 +122,6 @@ void ProcessInitialization(complex<double>*& inputSignal, complex<double>*& outp
 	//RandomDataInitialization(inputSignal, size);
 
 	MyDataInitialization(inputSignal, size);
-}
-
-void BitReversing(complex<double>* inputSignal, complex<double>* outputSignal, int size) {
-	int bitsCount = 0;
-	//bitsCount = log2(size)
-	for (int tmp_size = size; tmp_size > 1; tmp_size /= 2, bitsCount++);
-
-	//ind - index in input array
-	//revInd - correspondent to ind index in output array
-
-	for (int ind = 0; ind < size; ind++) {
-		int mask = 1 << (bitsCount - 1);
-		int revInd = 0;
-		for (int i = 0; i < bitsCount; i++) {
-			bool val = ind & mask;
-			revInd |= val << i;
-			mask = mask >> 1;
-		}
-		outputSignal[revInd] = inputSignal[ind];
-	}
 }
 
 void ParallelBitReversing(complex<double>* inputSignal, complex<double>* outputSignal, int size) {
@@ -117,36 +150,10 @@ void ParallelBitReversing(complex<double>* inputSignal, complex<double>* outputS
 	MPI_Bcast(outputSignal, size, MPI_C_DOUBLE_COMPLEX, 0, MPI_COMM_WORLD);
 }
 
-__inline void Butterfly(complex<double>* signal, complex<double> u, int offset, int butterflySize, int i, complex<double>* partialSignal, int size, int j) {
+__inline void PButterfly(complex<double>* signal, complex<double> u, int offset, int butterflySize) {
 	complex<double> tem = signal[offset + butterflySize] * u;
-	if (size / butterflySize / 2 < NProc) {
-		signal[offset + butterflySize] = signal[offset] - tem;
-		signal[offset] += tem;
-	}
-	else {
-		partialSignal[i] = signal[offset] - tem;
-		partialSignal[i] = signal[offset] + tem;
-	}
-}
-
-void SerialFFTCalculation(complex<double>* signal, int size) {
-	int m = 0;
-	for (int tmp_size = size; tmp_size > 1; tmp_size /= 2, m++);
-	for (int p = 0; p < m; p++) {
-		int butterflyOffset = 1 << (p + 1);
-		int butterflySize = butterflyOffset >> 1;
-		double coeff = PI / butterflySize;
-		for (int i = 0; i < size / butterflyOffset; i++)
-			for (int j = 0; j < butterflySize; j++)
-				Butterfly(signal, complex<double>(cos(-j * coeff),
-					sin(-j * coeff)), j + i * butterflyOffset, butterflySize);
-	}
-}
-
-// FFT computation
-void SerialFFT(complex<double>* inputSignal, complex<double>* outputSignal, int size) {
-	BitReversing(inputSignal, outputSignal, size);
-	SerialFFTCalculation(outputSignal, size);
+	signal[offset + butterflySize] = signal[offset] - tem;
+	signal[offset] += tem;
 }
 
 void ParallelFFTCalculation(complex<double>* signal, int size) {
@@ -158,31 +165,31 @@ void ParallelFFTCalculation(complex<double>* signal, int size) {
 		int butterflySize = butterflyOffset >> 1; // butterflySize = 2^p = butterflyOffset / 2
 		double coeff = PI / butterflySize;
 		complex<double>* partialSignal = new complex<double>[size / NProc];
+		MPI_Scatter(signal, size / NProc, MPI_C_DOUBLE_COMPLEX, partialSignal, size / NProc, MPI_C_DOUBLE_COMPLEX, 0, MPI_COMM_WORLD);
+		int iters = size / butterflyOffset;
+		if (size / butterflyOffset >= NProc)
+			iters /= NProc;
 
-		for (int i = 0; i < ((size / butterflyOffset < NProc) ? (size / butterflyOffset) : (size / butterflyOffset / NProc)); ++i) {
-			int ind = ((size / butterflyOffset < NProc) ? i : (i + size / butterflyOffset / NProc * ProcId));
+		for (int i = 0; i < iters; ++i) {
 			for (int j = 0; j < butterflySize; ++j)
-				Butterfly(signal, complex<double>(cos(-j * coeff),
-					sin(-j * coeff)), j + ind * butterflyOffset, butterflySize, i, partialSignal, size, j);
+				if (size / butterflyOffset >= NProc)
+					PButterfly(partialSignal, complex<double>(cos(-j * coeff),
+						sin(-j * coeff)), j + i * butterflyOffset, butterflySize);
+				else
+					PButterfly(signal, complex<double>(cos(-j * coeff),
+						sin(-j * coeff)), j + i * butterflyOffset, butterflySize);
 		}
 
 		if (size / butterflyOffset >= NProc) {
-			MPI_Gather(signal + size / NProc * ProcId, size / NProc, MPI_C_DOUBLE_COMPLEX, signal, size / NProc, MPI_C_DOUBLE_COMPLEX, 0, MPI_COMM_WORLD);
-			MPI_Bcast(signal, size, MPI_C_DOUBLE_COMPLEX, 0, MPI_COMM_WORLD);
+			MPI_Gather(partialSignal, size / NProc, MPI_C_DOUBLE_COMPLEX, signal, size / NProc, MPI_C_DOUBLE_COMPLEX, 0, MPI_COMM_WORLD);
 		}
 	}
 }
 
 void ParallelFFT(complex<double>* inputSignal, complex<double>* outputSignal, int size) {
-	BitReversing(inputSignal, outputSignal, size);
-	//ParallelBitReversing(inputSignal, outputSignal, size);
+	//BitReversing(inputSignal, outputSignal, size);
+	ParallelBitReversing(inputSignal, outputSignal, size);
 	ParallelFFTCalculation(outputSignal, size);
-}
-
-void PrintSignal(complex<double>* signal, int size) {
-	cout << "Result signal" << endl;
-	for (int i = 0; i < size; i++)
-		cout << signal[i] << endl;
 }
 
 void TestResult(complex<double>* inputSignal, complex<double>* outputSignal, int size) {
@@ -194,16 +201,27 @@ void TestResult(complex<double>* inputSignal, complex<double>* outputSignal, int
 	int equal = 0;
 	testSerialSignal = new complex<double>[size];
 	SerialFFT(inputSignal, testSerialSignal, size);
-	for (int i = 0; i < size; i++) {
-		if (abs(outputSignal[i] - testSerialSignal[i]) >= Accuracy)
-			equal = 1;
+	double maxdif = 0;
+	if (ProcId == 0) {
+		/*PrintSignal(testSerialSignal, size);
+		PrintSignal(outputSignal, size);*/
 	}
-
-	if (equal == 1)
-		printf("The results of serial and parallel algorithms are NOT identical. Check your code.\n");
-	else
-		printf("The results of serial and parallel algorithms are identical.\n");
-
+	for (int i = 0; i < size; i++) {
+		if (abs(outputSignal[i] - testSerialSignal[i]) >= Accuracy) {
+			equal = 1;
+			if (maxdif < abs(outputSignal[i] - testSerialSignal[i]))
+				maxdif = abs(outputSignal[i] - testSerialSignal[i]);
+		}
+	}
+	if (ProcId == 0) {
+		if (equal == 1) {
+			printf("The results of serial and parallel algorithms are NOT identical. Check your code.\n");
+			printf("%d\n", maxdif);
+		}
+		else
+			printf("The results of serial and parallel algorithms are identical.\n");
+		
+	}
 }
 
 double calcFun(double t) {
@@ -229,13 +247,15 @@ int main() {
 	double duration;
 	double minDuration = DBL_MAX;
 
-	bool parallel = false;
-	bool test = true;
+	bool parallel = true;
+	bool test = false;
 
-	cout << "Fast Fourier Transform" << endl;
+	if (!ProcId)
+		cout << "Fast Fourier Transform" << endl;
 
 	if (parallel) {
-		cout << "Parallel:\n";
+		if (!ProcId)
+			cout << "Parallel:\n";
 		ProcessInitialization(inputSignal, outputSignal, size);
 		for (int i = 0; i < repeatCount; i++) {
 			startTime = clock();
@@ -246,48 +266,56 @@ int main() {
 			if (duration < minDuration)
 				minDuration = duration;
 		}
-		cout << setprecision(6);
-		cout << "Execution time is " << minDuration << " s. " << endl;
+		if (!ProcId) {
+			cout << setprecision(6);
+			cout << "Execution time is " << minDuration << " s. " << endl;
+		}
 
 		// Result signal output
 		//PrintSignal(outputSignal, size);
 
 		// ========================================== Task-1 ===================================================
 
-		/*vector<double> A(size);
-		double norm = 0;
-		for (int i = 0; i < size; ++i) {
-			A[i] = (outputSignal[i].real() * outputSignal[i].real() * 4) + (outputSignal[i].imag() * outputSignal[i].imag() * 4);
-			norm += A[i];
-			A[i] = sqrt(A[i]);
-		}
+		if (!ProcId && task == 1) {
+			vector<double> A(size);
+			double norm = 0;
+			for (int i = 0; i < size; ++i) {
+				A[i] = (outputSignal[i].real() * outputSignal[i].real() * 4) + (outputSignal[i].imag() * outputSignal[i].imag() * 4);
+				norm += A[i];
+				A[i] = sqrt(A[i]);
+			}
 
-		norm = sqrt(norm);
-		for (int i = 0; i < size; ++i) {
-			A[i] /= norm;
-			cout << A[i] << "\n";
-		}
+			norm = sqrt(norm);
+			for (int i = 0; i < size; ++i) {
+				A[i] /= norm;
+				cout << A[i] << "\n";
+			}
 
-		cout << "\n";*/
+			cout << "\n";
+		}
 
 		// ========================================== Task-2 ===================================================
+		if (!ProcId && task == 2) {
+			for (double t = 1.0 / size; t < 1; t += 100.0 / size) {
+				cout << "t = " << t << "\n";
+				cout << "Accurate value: " << -log(2 * sin(PI * t)) << "\n";
+				double sum = outputSignal[0].real() / size;
+				for (int i = 1; i < size / 2; ++i)
+					sum += outputSignal[i].real() * 2 * cos(i * 2 * PI * t) / size + outputSignal[i].imag() * -2 * sin(i * 2 * PI * t) / size;
 
-		for (double t = 1.0 / size; t < 1; t += 100.0 / size) {
-			cout << "t = " << t << "\n";
-			cout << "Accurate value: " << -log(2 * sin(PI * t)) << "\n";
-			double sum = outputSignal[0].real() / size;
-			for (int i = 1; i < size / 2; ++i)
-				sum += outputSignal[i].real() * 2 * cos(i * 2 * PI * t) / size + outputSignal[i].imag() * -2 * sin(i * 2 * PI * t) / size;
-
-			cout << "Fourier value: " << calcFun(t) << "\n";
-			cout << "Calculated value: " << sum << "\n";
+				cout << "Fourier value: " << calcFun(t) << "\n";
+				cout << "Calculated value: " << sum << "\n";
+			}
 		}
 	}
 
 	if (test) {
 		ProcessInitialization(inputSignal, outputSignal, size);
+		startTime = clock();
 		ParallelFFT(inputSignal, outputSignal, size);
-		//PrintSignal(outputSignal, size);
+		duration = (clock() - startTime) / CLOCKS_PER_SEC;
+		if (!ProcId)
+			cout << "Execution time is " << duration << " s. " << endl;
 		TestResult(inputSignal, outputSignal, size);
 	}
 
